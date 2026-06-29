@@ -1,19 +1,33 @@
 <!DOCTYPE html>
-<html>
-  <script src="/main.js"></script>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FreeSwitchOS · L2 Table</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-  <title>FreeSwitchOS L2 Configuration</title>
-  </head>
-  <body>
-    <nav id="sidebar"></nav>
-    <div style="margin-left:16%;padding:1px 16px;height:1000px;">
+  <script src="/main.js"></script>
+</head>
+<body>
+  <nav id="sidebar"></nav>
+  <div style="margin-left:var(--sidebar-w, 220px);padding:28px 32px;">
+    <h1>L2 MAC Address Table</h1>
     <div id="ports"></div>
-    <h1>L2 Configuration</h1>
-    <table id="l2table">
-      <tr> <th>Port</th> <th>MAC</th> <th>VLAN</th> <th>Type</th> <th>Remove Entry</th></tr>
+    <table id="l2table" style="width:100%;">
+      <thead>
+        <tr>
+          <th>Port</th>
+          <th>MAC Address</th>
+          <th>VLAN</th>
+          <th>Type</th>
+          <th>Remove</th>
+        </tr>
+      </thead>
       <script src="/l2.js"></script>
     </table>
-    </div>
-  </body>
+  </div>
   <script src="/navigation.js"></script>
+</body>
 </html>

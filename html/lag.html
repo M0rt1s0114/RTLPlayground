@@ -1,27 +1,46 @@
 <!DOCTYPE html>
-<html>
-  <script src="/main.js"></script>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FreeSwitchOS · Link Aggregation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-  <title>Link Aggregation Configuration</title>
-  </head>
-  <body>
-    <nav id="sidebar"></nav>
-    <div style="margin-left:16%;padding:1px 16px;height:1000px;">
+  <script src="/main.js"></script>
+</head>
+<body>
+  <nav id="sidebar"></nav>
+  <div style="margin-left:var(--sidebar-w, 220px);padding:28px 32px;">
+    <h1>Link Aggregation Groups</h1>
     <div id="ports"></div>
-    <h1>Link Aggregation Groups Configuration</h1>
-    <h2>LAG 1 <input style="width:15%;margin-left: 3em;" class="action" id="l_sub0" onclick="lagSub(0);" type="button" value="Update / Create"></h2>
-    <div id="mLAG0"></div>
-    <br />
-    <h2>LAG 2 <input style="width:15%;margin-left: 3em;" class="action" id="l_sub1" onclick="lagSub(1);" type="button" value="Update / Create"></h2>
-    <div id="mLAG1"></div>
-    <br />
-    <h2>LAG 3 <input style="width:15%;margin-left: 3em;" class="action" id="l_sub2" onclick="lagSub(2);" type="button" value="Update / Create"></h2>
-    <div id="mLAG2"></div>
-    <br />
-    <h2>LAG 4 <input style="width:15%;margin-left: 3em;" class="action" id="l_sub3" onclick="lagSub(3);" type="button" value="Update / Create"></h2>
-    <div id="mLAG3"></div>
-    <script src="/lag.js"></script>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:900px;">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;">
+        <h2 style="margin-top:0;margin-bottom:12px;">LAG 1</h2>
+        <div id="mLAG0"></div>
+        <button style="margin-top:12px;" id="l_sub0" onclick="lagSub(0);">Apply LAG 1</button>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;">
+        <h2 style="margin-top:0;margin-bottom:12px;">LAG 2</h2>
+        <div id="mLAG1"></div>
+        <button style="margin-top:12px;" id="l_sub1" onclick="lagSub(1);">Apply LAG 2</button>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;">
+        <h2 style="margin-top:0;margin-bottom:12px;">LAG 3</h2>
+        <div id="mLAG2"></div>
+        <button style="margin-top:12px;" id="l_sub2" onclick="lagSub(2);">Apply LAG 3</button>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;">
+        <h2 style="margin-top:0;margin-bottom:12px;">LAG 4</h2>
+        <div id="mLAG3"></div>
+        <button style="margin-top:12px;" id="l_sub3" onclick="lagSub(3);">Apply LAG 4</button>
+      </div>
     </div>
-    <script src="/navigation.js"></script>
-  </body>
+
+    <script src="/lag.js"></script>
+  </div>
+  <script src="/navigation.js"></script>
+</body>
 </html>

@@ -1,58 +1,78 @@
 <!DOCTYPE html>
-<html>
-  <script src="/main.js"></script>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FreeSwitchOS · VLAN Configuration</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-  <title>FreeSwitchOS VLAN Configuration</title>
-  </head>
-  <body>
-    <nav id="sidebar"></nav>
-    <div style="margin-left:16%;padding:1px 16px;height:1000px;">
-    <div id="ports"></div>
+  <script src="/main.js"></script>
+</head>
+<body>
+  <nav id="sidebar"></nav>
+  <div style="margin-left:var(--sidebar-w, 220px);padding:28px 32px;">
     <h1>VLAN Configuration</h1>
-    <form id="vform" action="/vlan.html">
+    <div id="ports"></div>
+
+    <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:16px;">
       <div>
-        <label for="vlanSelect">VLAN auswählen:</label>
-        <select id="vlanSelect" style="margin: 0 0 0 8px">
-          <option value="" disabled selected>— VLAN wählen —</option>
+        <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">Select VLAN</label>
+        <select id="vlanSelect">
+          <option value="" disabled selected>— choose VLAN —</option>
         </select>
       </div>
-      <br/>
       <div>
-        <label for="vid">VLAN ID:</label>
-        <input type="number" min="1" max="4094" id="vid" name="vid">
-        <button type="button" style="margin: 0 0 0 24px" onclick="fetchVLAN();">Get Configuration</button>
+        <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">VLAN ID</label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="number" min="1" max="4094" id="vid" name="vid" style="width:90px;">
+          <button type="button" onclick="fetchVLAN();">Load</button>
+        </div>
       </div>
-      <br/><br/>
-      <label for="vname">VLAN Name:</label>
-      <input type="text" id="vname" name="vname"><br><br>
-      <br/>
-      <h2>Tagged Ports</h2>
-      <div id="tPorts"><button type="button" style="transform: translateY(-100%);margin: 0 50px 0 0" onclick="utClicked(true);">Select all</button></div>
-      <h2>Untagged Ports</h2>
-      <div id="uPorts"><button type="button" style="transform: translateY(-100%); margin: 0 50px 0 0" onclick="utClicked(false);">Select all</button> </div>
-      <h2>Use as default VLAN for incoming traffic (PVID)</h2>
-      <div id="pPorts"><button type="button" style="transform: translateY(-100%); margin: 0 50px 0 0" onclick="pvClicked(true);">Select all</button> </div>
-      <script src="/vlan.js"></script>
-      <br/> <input style="width:40%;" class="action" id="vlan_sub" onclick="vlanSub();" type="button" value="Update / Create">
-      <script src="/vlan_sub.js"></script>
-    </form>
-    <h2>Configured VLANs</h2>
-    <table id="vlanTable" style="width:90%">
+      <div>
+        <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">VLAN Name</label>
+        <input type="text" id="vname" name="vname" style="width:180px;">
+      </div>
+    </div>
+
+    <h2>Tagged Ports
+      <button type="button" style="margin-left:16px;font-size:11px;padding:4px 10px;" onclick="utClicked(true);">Select all</button>
+    </h2>
+    <div id="tPorts" style="margin-bottom:16px;"></div>
+
+    <h2>Untagged Ports
+      <button type="button" style="margin-left:16px;font-size:11px;padding:4px 10px;" onclick="utClicked(false);">Select all</button>
+    </h2>
+    <div id="uPorts" style="margin-bottom:16px;"></div>
+
+    <h2>PVID Ports (default VLAN for ingress)
+      <button type="button" style="margin-left:16px;font-size:11px;padding:4px 10px;" onclick="pvClicked(true);">Select all</button>
+    </h2>
+    <div id="pPorts" style="margin-bottom:20px;"></div>
+
+    <div>
+      <button type="button" id="vlan_sub" onclick="vlanSub();">Update / Create VLAN</button>
+    </div>
+    <script src="/vlan.js"></script>
+    <script src="/vlan_sub.js"></script>
+
+    <h2 style="margin-top:32px;">Configured VLANs</h2>
+    <table id="vlanTable" style="width:100%;">
       <thead>
         <tr>
           <th>VLAN</th>
           <th>Name</th>
-          <th>Member Ports</th>
-          <th>Tagged Ports</th>
-          <th>Untagged Ports</th>
-          <th>PVID Ports</th>
+          <th>Members</th>
+          <th>Tagged</th>
+          <th>Untagged</th>
+          <th>PVID</th>
           <th>Delete</th>
         </tr>
       </thead>
-      <tbody id="vlanTableBody">
-      </tbody>
+      <tbody id="vlanTableBody"></tbody>
     </table>
-    </div>
-    <script src="/navigation.js"></script>
-  </body>
+  </div>
+  <script src="/navigation.js"></script>
+</body>
 </html>

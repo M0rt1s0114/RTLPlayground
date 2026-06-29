@@ -1,30 +1,35 @@
 <!DOCTYPE html>
-<html>
-  <title>RTL Switch Login</title>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FreeSwitchOS · Login</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <script>
     function removeNote() {
-      document.getElementById("incorrect").innerHTML = "";
+      document.getElementById("incorrect").textContent = "";
     }
     window.addEventListener("load", function() {
       if (document.referrer.endsWith("login.html"))
-      document.getElementById("incorrect").innerHTML = "Wrong password!";
+        document.getElementById("incorrect").textContent = "Wrong password";
     });
-    </script>
+  </script>
 </head>
-
 <body class="login_page">
-  <div class = "center">
-  <h1> RTL Switch Login</h1>
-  <form method="post" action="login">
-  <div class="txt_field">
-    <input name="pwd" type="password" onclick="removeNote()" required />
-    <span></span>
-    <label>Password</label>
+  <div class="center">
+    <h1>FreeSwitchOS</h1>
+    <form method="post" action="login">
+      <div class="txt_field">
+        <input name="pwd" type="password" onclick="removeNote()" required autocomplete="current-password"/>
+        <span></span>
+        <label>Password</label>
+      </div>
+      <input type="submit" value="Sign in" style="width:100%;margin-top:8px;"/>
+      <p id="incorrect" style="margin-top:16px;color:var(--red);font-size:13px;text-align:center;min-height:20px;"></p>
+    </form>
   </div>
-  <input type="submit" value="Login"/>
-  <h3 id="incorrect" style="margin-top: 5em;"></h3>
-  </form>
 </body>
 </html>
-

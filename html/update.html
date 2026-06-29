@@ -1,19 +1,33 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <link rel="stylesheet" href="style.css">
-    <title>Firmware update</title>
-  </head>
-  <body>
-    <nav id="sidebar"></nav>
-    <div style="margin-left:16%;padding:1px 16px;height:1000px;width:40%;">
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FreeSwitchOS · Firmware Update</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav id="sidebar"></nav>
+  <div style="margin-left:var(--sidebar-w, 220px);padding:28px 32px;">
     <h1>Firmware Update</h1>
-    <form enctype="multipart/form-data" action="/upload" method="POST">
-    <input type="hidden" name="MAX_FILE_SIZE" value="1000000" />
-      Choose a firmware update file to upload: <br/> <br/>
-      <input name="uploadedfile" type="file" accept=".bin" /><br />
-    <input style="margin-top:3em" type="submit" value="Upload File" />
-    </form>
-    <script src="/navigation.js"></script>
-  </body>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:24px;max-width:500px;">
+      <p class="note" style="margin-bottom:16px;">Select a <code style="font-family:var(--font-mono);background:var(--surface2);padding:2px 6px;border-radius:4px;">.bin</code> firmware file to upload.</p>
+      <form enctype="multipart/form-data" action="/upload" method="POST">
+        <input type="hidden" name="MAX_FILE_SIZE" value="1000000">
+        <div style="margin-bottom:16px;">
+          <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px;">Firmware file</label>
+          <input name="uploadedfile" type="file" accept=".bin">
+        </div>
+        <p class="warn">⚠ Do not power off the switch during the update process.</p>
+        <div style="margin-top:12px;">
+          <input type="submit" value="Upload &amp; Flash Firmware">
+        </div>
+      </form>
+    </div>
+  </div>
+  <script src="/navigation.js"></script>
+</body>
 </html>

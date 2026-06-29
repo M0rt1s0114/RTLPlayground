@@ -1,26 +1,45 @@
 <!DOCTYPE html>
-<html>
-  <script src="/main.js"></script>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FreeSwitchOS · Port Mirroring</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-  <title>Mirror Configuration</title>
-  </head>
-  <body>
-    <nav id="sidebar"></nav>
-    <div style="margin-left:16%;padding:1px 16px;height:1000px;">
+  <script src="/main.js"></script>
+</head>
+<body>
+  <nav id="sidebar"></nav>
+  <div style="margin-left:var(--sidebar-w, 220px);padding:28px 32px;">
+    <h1>Port Mirroring</h1>
     <div id="ports"></div>
-    <h1>Mirror Configuration</h1>
-    <label class="tswitch">Enabled: <input id="me" type="checkbox"></label><br/>
-    <label for="mp">Mirroring Port:</label> <input type="number" id="mp" name="mp" min="1" max="9"/>
-    <h2>Mirrored Ports (TX)</h2>
-    <div id="mPortsTX"></div>
-    <br />
-    <h2>Mirrored Ports (RX)</h2>
-    <div id="mPortsRX"></div>
-    <br/> <input style="width:15%;" class="action" id="mirror_sub" onclick="mirrorSub();" type="button" value="Update / Create">
-    <input style="width:15%;" class="action" id="mirror_del" onclick="mirrorDel();" type="button" value="Disable Mirroring">
+
+    <div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap;margin-bottom:20px;">
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;">
+        <input id="me" type="checkbox"> Enabled
+      </label>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <label for="mp" style="font-size:13px;color:var(--muted);">Mirror port:</label>
+        <input type="number" id="mp" name="mp" min="1" max="9" style="width:70px;">
+      </div>
+    </div>
+
+    <h2>Mirrored Ports — TX</h2>
+    <div id="mPortsTX" style="margin-bottom:16px;"></div>
+
+    <h2>Mirrored Ports — RX</h2>
+    <div id="mPortsRX" style="margin-bottom:20px;"></div>
+
+    <div style="display:flex;gap:10px;">
+      <button id="mirror_sub" onclick="mirrorSub();">Update / Create</button>
+      <button id="mirror_del" onclick="mirrorDel();" style="color:var(--red);border-color:var(--red);">Disable Mirroring</button>
+    </div>
+
     <script src="/mirror.js"></script>
     <script src="/mirror_sub.js"></script>
-    </div>
-    <script src="/navigation.js"></script>
-  </body>
+  </div>
+  <script src="/navigation.js"></script>
+</body>
 </html>

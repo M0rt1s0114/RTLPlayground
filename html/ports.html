@@ -1,24 +1,37 @@
 <!DOCTYPE html>
-<html>
-  <script src="/main.js"></script>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FreeSwitchOS · Port Configuration</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-  <title>FreeSwitchOS Port Configuration</title>
-  </head>
-  <body>
-    <nav id="sidebar"></nav>
-    <div style="margin-left:16%;padding:1px 16px;height:1000px;">
-    <div id="ports"></div>
+  <script src="/main.js"></script>
+</head>
+<body>
+  <nav id="sidebar"></nav>
+  <div style="margin-left:var(--sidebar-w, 220px);padding:28px 32px;">
     <h1>Port Configuration</h1>
-    <form id="vform" action="/vlan.html">
-    <table id="speedtable">
-      <tr> <th>Port</th> <th>Name</th> <th>Current Link Speed</th><th>Set Speed</th><th>Disabled</th><th>Apply</th></tr>
+    <div id="ports"></div>
+    <h2>Link Speed</h2>
+    <table id="speedtable" style="width:100%;max-width:760px;">
+      <thead>
+        <tr>
+          <th>Port</th>
+          <th>Name</th>
+          <th>Current Speed</th>
+          <th>Set Speed</th>
+          <th>Disabled</th>
+          <th>Apply</th>
+        </tr>
+      </thead>
     </table>
-    <h2 style="margin-top:3em">Configure Maximum Frame Size (MTU) forwarded at Port</h2>
-    <table id="mtutable" style="margin-top:1em">
-    </table>
+    <h2 style="margin-top:32px;">Maximum Frame Size (MTU)</h2>
+    <table id="mtutable" style="margin-top:12px;"></table>
     <script src="/ports.js"></script>
-    </form>
-    </div>
-    <script src="/navigation.js"></script>
-  </body>
+  </div>
+  <script src="/navigation.js"></script>
+</body>
 </html>
