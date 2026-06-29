@@ -53,12 +53,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Install toolchain
         run: |
           apt-get update -qq
           apt-get install -y --no-install-recommends \
-            make gcc sdcc xxd python-is-python3 libjson-c-dev git ca-certificates
+            make gcc libc6-dev sdcc xxd python-is-python3 libjson-c-dev git ca-certificates
 
       - name: Build ${{ matrix.machine }}
         id: build
@@ -88,12 +90,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Install toolchain
         run: |
           apt-get update -qq
           apt-get install -y --no-install-recommends \
-            make gcc sdcc xxd python-is-python3 libjson-c-dev
+            make gcc libc6-dev sdcc xxd python-is-python3 libjson-c-dev git
 
       - name: Check machine.c for all machines
         run: make machine_check
