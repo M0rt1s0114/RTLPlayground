@@ -23,19 +23,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - id: set-matrix
+      - name: Set matrix
+        id: set-matrix
         run: |
           INPUT="${{ github.event.inputs.machine }}"
           if [ -n "$INPUT" ]; then
             MATRIX=$(printf '{"machine":["%s"]}' "$INPUT")
           else
-            # Auto-discover boards from boards/ directory
             MACHINES=$(ls boards/*.yaml | sed 's|boards/||;s|\.yaml||' | \
-              python3 -c "
-import sys, json
-names = sys.stdin.read().split()
-print(json.dumps({'machine': names}))
-")
+              python3 -c "import sys,json; print(json.dumps({'machine': sys.stdin.read().split()}))")
             MATRIX=$MACHINES
           fi
           echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
