@@ -12,20 +12,29 @@ AFLAGS= -plosgff
 SUBDIRS := tools
 SUBDIRSCLEAN=$(addsuffix clean,$(SUBDIRS))
 
-ifeq ($(MACHINE),)
-$(error Please specify a board: make MACHINE=<board_id>  (see boards/ directory))
-endif
-
-BOARD_YAML := boards/$(MACHINE).yaml
 GEN_MACHINE := tools/gen_machine_c.py
+
+# Guard: MACHINE is required for 'all', but machine_check uses its own loop.
+# We accept the special value "machine_check_placeholder" to satisfy variable
+# expansion (BUILDDIR etc.) without triggering the check_board error.
+ifeq ($(MACHINE),)
+  BOARD_YAML :=
+  BUILDDIR   := output/_placeholder
+else ifeq ($(MACHINE),machine_check_placeholder)
+  BOARD_YAML :=
+  BUILDDIR   := output/_placeholder
+else
+  BOARD_YAML := boards/$(MACHINE).yaml
+endif
 
 BUILDDIR = output/$(MACHINE)
 VERSION_HEADER := version.h
 
-GIT_VERSION := $(shell git rev-parse --short HEAD)
-ifeq ($(shell git status --porcelain --untracked-files=no),)
-else
-	GIT_VERSION := $(GIT_VERSION)-dirty
+GIT_VERSION := $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+ifneq ($(GIT_VERSION),unknown)
+  ifneq ($(shell git status --porcelain --untracked-files=no 2>/dev/null),)
+    GIT_VERSION := $(GIT_VERSION)-dirty
+  endif
 endif
 
 VERSION_EXTENSION = v$(VERSION)-$(GIT_VERSION)
@@ -35,7 +44,13 @@ all: check_board generate_machine create_build_dir $(VERSION_HEADER) $(SUBDIRS) 
 
 
 check_board:
-	@if [ ! -f $(BOARD_YAML) ]; then \
+	@if [ -z "$(MACHINE)" ] || [ "$(MACHINE)" = "machine_check_placeholder" ]; then \
+		echo "Error: MACHINE not set. Usage: make MACHINE=<board_id>"; \
+		echo "Available boards:"; \
+		ls boards/*.yaml | sed 's|boards/||;s|\.yaml||'; \
+		exit 1; \
+	fi
+	@if [ ! -f "$(BOARD_YAML)" ]; then \
 		echo "Error: board file not found: $(BOARD_YAML)"; \
 		echo "Available boards:"; \
 		ls boards/*.yaml | sed 's|boards/||;s|\.yaml||'; \
