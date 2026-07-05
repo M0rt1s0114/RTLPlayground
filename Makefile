@@ -13,10 +13,11 @@ SUBDIRS := tools
 SUBDIRSCLEAN=$(addsuffix clean,$(SUBDIRS))
 
 ifeq ($(MACHINE),)
-	MACHINE:= $(shell grep "^\s*#define MACHINE_" machine.h | sed "s/^\s*#define MACHINE_//")
-else
-	CC_FLAGS += -DMACHINE_$(MACHINE)
+$(error Please specify a board: make MACHINE=<board_id>  (see boards/ directory))
 endif
+
+BOARD_YAML := boards/$(MACHINE).yaml
+GEN_MACHINE := tools/gen_machine_c.py
 
 BUILDDIR = output/$(MACHINE)
 VERSION_HEADER := version.h
@@ -30,7 +31,20 @@ endif
 VERSION_EXTENSION = v$(VERSION)-$(GIT_VERSION)
 FILENAME_EXTENSION = $(VERSION_EXTENSION)-$(MACHINE)
 
-all: create_build_dir $(VERSION_HEADER) $(SUBDIRS) $(BUILDDIR)/rtlplayground-$(FILENAME_EXTENSION).bin
+all: check_board generate_machine create_build_dir $(VERSION_HEADER) $(SUBDIRS) $(BUILDDIR)/rtlplayground-$(FILENAME_EXTENSION).bin
+
+
+check_board:
+	@if [ ! -f $(BOARD_YAML) ]; then \
+		echo "Error: board file not found: $(BOARD_YAML)"; \
+		echo "Available boards:"; \
+		ls boards/*.yaml | sed 's|boards/||;s|\.yaml||'; \
+		exit 1; \
+	fi
+
+generate_machine: $(BOARD_YAML)
+	python3 $(GEN_MACHINE) $(BOARD_YAML) machine.c
+	@echo "  GEN machine.c  <--  $(BOARD_YAML)"
 
 create_build_dir:
 	mkdir -p $(BUILDDIR)
@@ -90,17 +104,19 @@ $(BUILDDIR)/rtlplayground-$(FILENAME_EXTENSION).bin: $(BUILDDIR)/rtlplayground.i
 	tools/output/crc_calculator -u $@
 	ln -sf $(MACHINE)/rtlplayground-$(FILENAME_EXTENSION).bin output/rtlplayground.bin
 
-.PHONY: clean all $(SUBDIRS) $(VERSION_HEADER)
+.PHONY: clean all $(SUBDIRS) $(VERSION_HEADER) check_board generate_machine machine_check
 
 .PHONY:
 machine_check:
-	@mkdir -p $(BUILDDIR)/tmp
+	@mkdir -p output/machine_check_tmp
 	@set -eo pipefail; \
-	for MACHINE in `grep -e ' MACHINE_' machine.c | sed -e 's%^.* MACHINE_%%' -e 's%[ ]*//.*$$%%' | sort -u`; \
-	do \
-	echo "Checking $${MACHINE}"; \
-	$(CC) $(CC_FLAGS) -DMACHINE_$${MACHINE} -MMD -o $(BUILDDIR)/tmp/machine_check -c machine.c; \
+	for YAML in boards/*.yaml; do \
+		MACHINE=$$(basename $$YAML .yaml); \
+		echo "Checking $${MACHINE}"; \
+		python3 $(GEN_MACHINE) $$YAML output/machine_check_tmp/machine_$${MACHINE}.c; \
+		$(CC) -mmcs51 -I. -Ihttpd -Iuip -o output/machine_check_tmp/$${MACHINE}.rel -c output/machine_check_tmp/machine_$${MACHINE}.c; \
 	done
-	@rm -rf $(BUILDDIR)/tmp
+	@rm -rf output/machine_check_tmp
+	@echo "All boards OK." 
 
 -include $(DEPS)

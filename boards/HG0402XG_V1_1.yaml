@@ -1,0 +1,74 @@
+machine_id: HG0402XG_V1_1
+machine_name: HG0402XG V1.1
+isRTL8373: 0
+min_port: 3
+max_port: 8
+n_sfp: 2
+log_to_phys_port:
+- 0
+- 0
+- 0
+- 5
+- 1
+- 2
+- 3
+- 4
+- 6
+phys_to_log_port:
+- 4
+- 5
+- 6
+- 7
+- 3
+- 8
+- 0
+- 0
+- 0
+is_sfp:
+- 0
+- 0
+- 0
+- 2
+- 0
+- 0
+- 0
+- 0
+- 1
+sfp_ports:
+- pin_detect: GPIO50_I2C_SCL2_UART1_TX
+  pin_los: GPIO10_LED10
+  pin_tx_disable: GPIO_NA
+  sds: 1
+  i2c:
+    sda: GPIO41_I2C_SDA3_MDIO1
+    scl: GPIO40_I2C_SCL3_MDC1
+- pin_detect: GPIO30_ACL_BIT3_EN
+  pin_los: GPIO51_I2C_SDA2_UART1_RX
+  pin_tx_disable: GPIO_NA
+  sds: 0
+  i2c:
+    sda: GPIO39_I2C_SDA4
+    scl: GPIO40_I2C_SCL3_MDC1
+reset_pin: GPIO_NA
+high_leds:
+  mux: LED_27
+  enable: LED_27 | LED_29
+port_led_set:
+- 0
+- 0
+- 0
+- 1
+- 0
+- 0
+- 0
+- 0
+- 1
+led_sets:
+- - LEDS_10M | LEDS_LINK | LEDS_ACT
+  - LEDS_1G | LEDS_100M | LEDS_10M | LEDS_2G5 | LEDS_LINK | LEDS_ACT
+  - LEDS_2G5 | LEDS_LINK | LEDS_ACT
+  - '0'
+- - LEDS_100M | LEDS_10M | LEDS_LINK
+  - LEDS_2G5 | LEDS_1G | LEDS_100M | LEDS_10M | LEDS_LINK | LEDS_ACT | LEDS_10G
+  - LEDS_10G | LEDS_LINK
+  - '0'
