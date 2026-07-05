@@ -59,7 +59,7 @@ jobs:
           apt-get update -qq
           apt-get install -y --no-install-recommends \
             make gcc libc6-dev sdcc xxd python-is-python3 libjson-c-dev git ca-certificates
-          pip install --break-system-packages --quiet pyyaml
+          python3 -m pip install --break-system-packages --quiet pyyaml
 
       - name: Build ${{ matrix.machine }}
         run: make MACHINE="${{ matrix.machine }}"
@@ -96,7 +96,7 @@ jobs:
           apt-get update -qq
           apt-get install -y --no-install-recommends \
             make gcc libc6-dev sdcc xxd python-is-python3 libjson-c-dev git
-          pip install --break-system-packages --quiet pyyaml
+          python3 -m pip install --break-system-packages --quiet pyyaml
 
       - name: Check all boards
         run: make machine_check
