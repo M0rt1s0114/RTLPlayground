@@ -16,13 +16,9 @@ function vlanForm() {
     inp.type = "checkbox"; inp.setAttribute("class","psel");
     inp.id = "tport" + i;
     inp.setAttribute('onclick', `setC("u", ${i}, false);`);
-    const o = document.createElement("img");
-    if (pIsSFP[i - 1]) {
-      o.src = "sfp.svg"; o.width ="60"; o.height ="60";
-    } else {
-      o.src = "port.svg"; o.width = "40"; o.height = "40";
-    }
-    l.appendChild(inp); l.appendChild(o);
+    const o = document.createElement("span");
+    o.innerHTML = pIsSFP[i-1] ? sfpSVGStr(60,44) : portSVGStr(40,40);
+    l.appendChild(inp); l.appendChild(o.firstChild);
     d.appendChild(l)
     t.appendChild(d);
     var d2=d.cloneNode(true);
