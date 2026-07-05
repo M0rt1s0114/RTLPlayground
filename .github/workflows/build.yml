@@ -20,21 +20,23 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
       - id: set-matrix
         run: |
-          ALL='["DEFAULT_8C_1SFP","FNS1200P","HG0402XG_V1_1","HI_K0801WS","K0501W_V2_0",
-                "KP_9000_6XHML_X2","KP_9000_6XH_X","KP_9000_6XH_X2",
-                "KP_9000_9XHML_X_V2_2","KP_9000_9XHML_X_V3_1","KP_9000_9XH_X_EU",
-                "LIANGUO_ZX_SWTGW215AS","PCB_SWTG024AS_A_2_0_1","STEAMEMO_IG204_V1",
-                "SWGT024_V2_0_MANAGED","SWGT024_V2_0_UNMANAGED","SWTG018AS_A_V_2_0",
-                "SWTG024AS_V2_0","SWTGW218AS","TRENDNET_TEG_S562",
-                "ZX310S_4T2XH","ZX310S_4T2XT"]'
-
           INPUT="${{ github.event.inputs.machine }}"
           if [ -n "$INPUT" ]; then
             MATRIX=$(printf '{"machine":["%s"]}' "$INPUT")
           else
-            MATRIX=$(echo "$ALL" | tr -d '[:space:]' | sed 's/^/{"machine":/' | sed 's/$/}/')
+            # Auto-discover boards from boards/ directory
+            MACHINES=$(ls boards/*.yaml | sed 's|boards/||;s|\.yaml||' | \
+              python3 -c "
+import sys, json
+names = sys.stdin.read().split()
+print(json.dumps({'machine': names}))
+")
+            MATRIX=$MACHINES
           fi
           echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
 
@@ -61,9 +63,9 @@ jobs:
           apt-get update -qq
           apt-get install -y --no-install-recommends \
             make gcc libc6-dev sdcc xxd python-is-python3 libjson-c-dev git ca-certificates
+          pip install --break-system-packages --quiet pyyaml
 
       - name: Build ${{ matrix.machine }}
-        id: build
         run: make MACHINE="${{ matrix.machine }}"
 
       - name: Locate firmware binary
@@ -71,7 +73,7 @@ jobs:
         run: |
           BIN=$(find output/ -name "*.bin" ! -name "rtlplayground.bin" | head -1)
           echo "path=$BIN" >> "$GITHUB_OUTPUT"
-          echo "name=$(basename $BIN)" >> "$GITHUB_OUTPUT"
+          echo "name=$(basename "$BIN")" >> "$GITHUB_OUTPUT"
 
       - name: Upload firmware artifact
         uses: actions/upload-artifact@v7
@@ -81,9 +83,9 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-  # ── 3. Validate machine.c compiles for ALL targets (sanity gate) ──────────
+  # ── 3. Validate all board YAML files compile cleanly ──────────────────────
   machine-check:
-    name: Validate machine.c (all targets)
+    name: Validate all boards
     runs-on: ubuntu-latest
     container:
       image: debian:trixie
@@ -98,8 +100,9 @@ jobs:
           apt-get update -qq
           apt-get install -y --no-install-recommends \
             make gcc libc6-dev sdcc xxd python-is-python3 libjson-c-dev git
+          pip install --break-system-packages --quiet pyyaml
 
-      - name: Check machine.c for all machines
+      - name: Check all boards
         run: make machine_check
 
   # ── 4. Bundle every .bin into one release archive (tags only) ─────────────
@@ -116,7 +119,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Download all firmware artifacts
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@v7
         with:
           path: release-bins
           pattern: firmware-*
