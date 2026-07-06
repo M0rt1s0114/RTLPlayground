@@ -1,41 +1,23 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FreeSwitchOS · Link Aggregation</title>
+  <title>FreeSwitchOS · 链路聚合</title>
   <link rel="stylesheet" href="style.css">
   <script src="/main.js"></script>
 </head>
 <body>
   <nav id="sidebar"></nav>
   <div class="main-wrap">
-    <h1>Link Aggregation Groups</h1>
+    <h1>链路聚合组（LAG）</h1>
     <div id="ports"></div>
-
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:900px;">
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;">
-        <h2 style="margin-top:0;margin-bottom:12px;">LAG 1</h2>
-        <div id="mLAG0"></div>
-        <button style="margin-top:12px;" id="l_sub0" onclick="lagSub(0);">Apply LAG 1</button>
-      </div>
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;">
-        <h2 style="margin-top:0;margin-bottom:12px;">LAG 2</h2>
-        <div id="mLAG1"></div>
-        <button style="margin-top:12px;" id="l_sub1" onclick="lagSub(1);">Apply LAG 2</button>
-      </div>
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;">
-        <h2 style="margin-top:0;margin-bottom:12px;">LAG 3</h2>
-        <div id="mLAG2"></div>
-        <button style="margin-top:12px;" id="l_sub2" onclick="lagSub(2);">Apply LAG 3</button>
-      </div>
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;">
-        <h2 style="margin-top:0;margin-bottom:12px;">LAG 4</h2>
-        <div id="mLAG3"></div>
-        <button style="margin-top:12px;" id="l_sub3" onclick="lagSub(3);">Apply LAG 4</button>
-      </div>
+      <div class="card"><h2 style="margin-top:0;margin-bottom:12px;">LAG 1</h2><div id="mLAG0"></div><button style="margin-top:12px;" id="l_sub0" onclick="lagSub(0);">应用 LAG 1</button></div>
+      <div class="card"><h2 style="margin-top:0;margin-bottom:12px;">LAG 2</h2><div id="mLAG1"></div><button style="margin-top:12px;" id="l_sub1" onclick="lagSub(1);">应用 LAG 2</button></div>
+      <div class="card"><h2 style="margin-top:0;margin-bottom:12px;">LAG 3</h2><div id="mLAG2"></div><button style="margin-top:12px;" id="l_sub2" onclick="lagSub(2);">应用 LAG 3</button></div>
+      <div class="card"><h2 style="margin-top:0;margin-bottom:12px;">LAG 4</h2><div id="mLAG3"></div><button style="margin-top:12px;" id="l_sub3" onclick="lagSub(3);">应用 LAG 4</button></div>
     </div>
-
     <script src="/lag.js"></script>
   </div>
   <script src="/navigation.js"></script>

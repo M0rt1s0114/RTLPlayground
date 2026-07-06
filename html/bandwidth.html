@@ -1,32 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FreeSwitchOS · Bandwidth Limits</title>
+  <title>FreeSwitchOS · 带宽限速</title>
   <link rel="stylesheet" href="style.css">
   <script src="/main.js"></script>
 </head>
 <body>
   <nav id="sidebar"></nav>
   <div class="main-wrap">
-    <h1>Ingress &amp; Egress Bandwidth Limits</h1>
+    <h1>入向 &amp; 出向带宽限速</h1>
     <div id="ports"></div>
     <table id="bwtable" style="width:100%;">
       <thead>
         <tr>
-          <th rowspan="2">Port</th>
-          <th colspan="3">Ingress</th>
-          <th colspan="2">Egress</th>
-          <th rowspan="2">Apply</th>
+          <th rowspan="2">端口</th>
+          <th colspan="3">入向（Ingress）</th>
+          <th colspan="2">出向（Egress）</th>
+          <th rowspan="2">应用</th>
         </tr>
-        <tr>
-          <th>Limit</th>
-          <th>Bandwidth [kBit/s]</th>
-          <th>Flow Control</th>
-          <th>Limit</th>
-          <th>Bandwidth [kBit/s]</th>
-        </tr>
+        <tr><th>限速</th><th>带宽 [kbit/s]</th><th>流控</th><th>限速</th><th>带宽 [kbit/s]</th></tr>
       </thead>
     </table>
     <script src="/bandwidth.js"></script>

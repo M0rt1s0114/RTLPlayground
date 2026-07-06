@@ -1,26 +1,20 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FreeSwitchOS · L2 Table</title>
+  <title>FreeSwitchOS · L2 表</title>
   <link rel="stylesheet" href="style.css">
   <script src="/main.js"></script>
 </head>
 <body>
   <nav id="sidebar"></nav>
   <div class="main-wrap">
-    <h1>L2 MAC Address Table</h1>
+    <h1>L2 MAC 地址表</h1>
     <div id="ports"></div>
     <table id="l2table" style="width:100%;">
       <thead>
-        <tr>
-          <th>Port</th>
-          <th>MAC Address</th>
-          <th>VLAN</th>
-          <th>Type</th>
-          <th>Remove</th>
-        </tr>
+        <tr><th>端口</th><th>MAC 地址</th><th>VLAN</th><th>类型</th><th>删除</th></tr>
       </thead>
       <script src="/l2.js"></script>
     </table>

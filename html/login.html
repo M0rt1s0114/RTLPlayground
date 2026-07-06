@@ -1,17 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FreeSwitchOS · Login</title>
+  <title>FreeSwitchOS · 登录</title>
   <link rel="stylesheet" href="style.css">
   <script>
-    function removeNote() {
-      document.getElementById("incorrect").textContent = "";
-    }
-    window.addEventListener("load", function() {
-      if (document.referrer.endsWith("login.html"))
-        document.getElementById("incorrect").textContent = "Wrong password";
+    function removeNote() { document.getElementById('incorrect').textContent = ''; }
+    window.addEventListener('load', function () {
+      if (document.referrer.endsWith('login.html'))
+        document.getElementById('incorrect').textContent = '密码错误，请重试';
     });
   </script>
 </head>
@@ -22,9 +20,9 @@
       <div class="txt_field">
         <input name="pwd" type="password" onclick="removeNote()" required autocomplete="current-password"/>
         <span></span>
-        <label>Password</label>
+        <label>密码</label>
       </div>
-      <input type="submit" value="Sign in" style="width:100%;margin-top:8px;"/>
+      <input type="submit" value="登录" style="width:100%;margin-top:8px;">
       <p id="incorrect" style="margin-top:16px;color:var(--red);font-size:13px;text-align:center;min-height:20px;"></p>
     </form>
   </div>

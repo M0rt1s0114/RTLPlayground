@@ -1,41 +1,35 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FreeSwitchOS · Port Mirroring</title>
+  <title>FreeSwitchOS · 端口镜像</title>
   <link rel="stylesheet" href="style.css">
   <script src="/main.js"></script>
 </head>
 <body>
   <nav id="sidebar"></nav>
   <div class="main-wrap">
-    <h1>Port Mirroring</h1>
+    <h1>端口镜像</h1>
     <div id="ports"></div>
-
     <div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap;margin-bottom:20px;">
       <label style="display:flex;align-items:center;gap:8px;font-size:13px;">
-        <input id="me" type="checkbox"> Enabled
+        <input id="me" type="checkbox"> 启用镜像
       </label>
       <div style="display:flex;align-items:center;gap:8px;">
-        <label for="mp" style="font-size:13px;color:var(--muted);">Mirror port:</label>
+        <label for="mp" style="font-size:13px;color:var(--mut);">镜像目标端口：</label>
         <input type="number" id="mp" name="mp" min="1" max="9" style="width:70px;">
       </div>
     </div>
-
-    <h2>Mirrored Ports — TX</h2>
+    <h2>镜像端口 — TX（发送）</h2>
     <div id="mPortsTX" style="margin-bottom:16px;"></div>
-
-    <h2>Mirrored Ports — RX</h2>
+    <h2>镜像端口 — RX（接收）</h2>
     <div id="mPortsRX" style="margin-bottom:20px;"></div>
-
     <div style="display:flex;gap:10px;">
-      <button id="mirror_sub" onclick="mirrorSub();">Update / Create</button>
-      <button id="mirror_del" onclick="mirrorDel();" style="color:var(--red);border-color:var(--red);">Disable Mirroring</button>
+      <button id="mirror_sub" onclick="mirrorSub();">更新 / 创建</button>
+      <button id="mirror_del" onclick="mirrorDel();" style="color:var(--red);border-color:var(--red);">禁用镜像</button>
     </div>
-
-    <script src="/mirror.js"></script>
-    <script src="/mirror_sub.js"></script>
+    <script src="/mirror.js"></script><script src="/mirror_sub.js"></script>
   </div>
   <script src="/navigation.js"></script>
 </body>

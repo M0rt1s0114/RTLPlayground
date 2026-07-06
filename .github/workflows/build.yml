@@ -11,11 +11,6 @@ on:
         description: "Target machine (leave empty to build all)"
         required: false
         default: ""
-      release:
-        description: "Create a GitHub Release after build?"
-        type: boolean
-        required: false
-        default: false
 
 jobs:
   # ── 1. Determine which machines to build ──────────────────────────────────
@@ -28,15 +23,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Set matrix
-        id: set-matrix
+      - id: set-matrix
         run: |
           INPUT="${{ github.event.inputs.machine }}"
           if [ -n "$INPUT" ]; then
             MATRIX=$(printf '{"machine":["%s"]}' "$INPUT")
           else
+            # Auto-discover boards from boards/ directory
             MACHINES=$(ls boards/*.yaml | sed 's|boards/||;s|\.yaml||' | \
-              python3 -c "import sys,json; print(json.dumps({'machine': sys.stdin.read().split()}))")
+              python3 -c "
+import sys, json
+names = sys.stdin.read().split()
+print(json.dumps({'machine': names}))
+")
             MATRIX=$MACHINES
           fi
           echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
@@ -63,7 +62,8 @@ jobs:
         run: |
           apt-get update -qq
           apt-get install -y --no-install-recommends \
-            make gcc libc6-dev sdcc xxd python-is-python3 python3-yaml libjson-c-dev git ca-certificates
+            make gcc libc6-dev sdcc xxd python-is-python3 libjson-c-dev git ca-certificates
+          pip install --break-system-packages --quiet pyyaml
 
       - name: Build ${{ matrix.machine }}
         run: make MACHINE="${{ matrix.machine }}"
@@ -99,18 +99,17 @@ jobs:
         run: |
           apt-get update -qq
           apt-get install -y --no-install-recommends \
-            make gcc libc6-dev sdcc xxd python-is-python3 python3-yaml libjson-c-dev git
+            make gcc libc6-dev sdcc xxd python-is-python3 libjson-c-dev git
+          pip install --break-system-packages --quiet pyyaml
 
       - name: Check all boards
-        run: make machine_check MACHINE=machine_check_placeholder
+        run: make machine_check
 
-  # ── 4. Bundle every .bin into one release archive ─────────────────────────
+  # ── 4. Bundle every .bin into one release archive (tags only) ─────────────
   release:
     name: Create GitHub Release
     needs: [build, machine-check]
-    if: |
-      startsWith(github.ref, 'refs/tags/v') ||
-      (github.event_name == 'workflow_dispatch' && github.event.inputs.release == 'true')
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -129,34 +128,20 @@ jobs:
       - name: List collected binaries
         run: ls -lh release-bins/
 
-      - name: Set release tag
-        id: tag
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "name=manual-$(date +'%Y%m%d-%H%M%S')" >> "$GITHUB_OUTPUT"
-            echo "tag=manual-$(date +'%Y%m%d-%H%M%S')" >> "$GITHUB_OUTPUT"
-            echo "prerelease=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "name=RTLPlayground ${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
-            echo "tag=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
-            echo "prerelease=${{ contains(github.ref_name, '-rc') || contains(github.ref_name, '-beta') }}" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Create release archive
         run: |
-          TAG="${{ steps.tag.outputs.tag }}"
+          TAG="${{ github.ref_name }}"
           zip "RTLPlayground-firmware-${TAG}-all-machines.zip" release-bins/*.bin
           sha256sum release-bins/*.bin > "RTLPlayground-firmware-${TAG}-SHA256SUMS.txt"
 
       - name: Publish release
         uses: softprops/action-gh-release@v3
         with:
-          name: ${{ steps.tag.outputs.name }}
-          tag_name: ${{ steps.tag.outputs.tag }}
+          name: "RTLPlayground ${{ github.ref_name }}"
           draft: false
-          prerelease: ${{ steps.tag.outputs.prerelease }}
+          prerelease: ${{ contains(github.ref_name, '-rc') || contains(github.ref_name, '-beta') }}
           generate_release_notes: true
           files: |
             release-bins/*.bin
-            RTLPlayground-firmware-${{ steps.tag.outputs.tag }}-all-machines.zip
-            RTLPlayground-firmware-${{ steps.tag.outputs.tag }}-SHA256SUMS.txt
+            RTLPlayground-firmware-${{ github.ref_name }}-all-machines.zip
+            RTLPlayground-firmware-${{ github.ref_name }}-SHA256SUMS.txt

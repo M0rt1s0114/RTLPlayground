@@ -1,72 +1,45 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FreeSwitchOS · VLAN Configuration</title>
+  <title>FreeSwitchOS · VLAN 配置</title>
   <link rel="stylesheet" href="style.css">
   <script src="/main.js"></script>
 </head>
 <body>
   <nav id="sidebar"></nav>
   <div class="main-wrap">
-    <h1>VLAN Configuration</h1>
+    <h1>VLAN 配置</h1>
     <div id="ports"></div>
-
     <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:16px;">
       <div>
-        <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">Select VLAN</label>
-        <select id="vlanSelect">
-          <option value="" disabled selected>— choose VLAN —</option>
-        </select>
+        <label style="font-size:12px;color:var(--mut);display:block;margin-bottom:4px;">选择 VLAN</label>
+        <select id="vlanSelect"><option value="" disabled selected>— 请选择 —</option></select>
       </div>
       <div>
-        <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">VLAN ID</label>
+        <label style="font-size:12px;color:var(--mut);display:block;margin-bottom:4px;">VLAN ID</label>
         <div style="display:flex;gap:8px;align-items:center;">
           <input type="number" min="1" max="4094" id="vid" name="vid" style="width:90px;">
-          <button type="button" onclick="fetchVLAN();">Load</button>
+          <button type="button" onclick="fetchVLAN();">载入</button>
         </div>
       </div>
       <div>
-        <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">VLAN Name</label>
+        <label style="font-size:12px;color:var(--mut);display:block;margin-bottom:4px;">VLAN 名称</label>
         <input type="text" id="vname" name="vname" style="width:180px;">
       </div>
     </div>
-
-    <h2>Tagged Ports
-      <button type="button" style="margin-left:16px;font-size:11px;padding:4px 10px;" onclick="utClicked(true);">Select all</button>
-    </h2>
+    <h2>Tagged 端口 <button type="button" style="margin-left:16px;font-size:11px;padding:4px 10px;" onclick="utClicked(true);">全选</button></h2>
     <div id="tPorts" style="margin-bottom:16px;"></div>
-
-    <h2>Untagged Ports
-      <button type="button" style="margin-left:16px;font-size:11px;padding:4px 10px;" onclick="utClicked(false);">Select all</button>
-    </h2>
+    <h2>Untagged 端口 <button type="button" style="margin-left:16px;font-size:11px;padding:4px 10px;" onclick="utClicked(false);">全选</button></h2>
     <div id="uPorts" style="margin-bottom:16px;"></div>
-
-    <h2>PVID Ports (default VLAN for ingress)
-      <button type="button" style="margin-left:16px;font-size:11px;padding:4px 10px;" onclick="pvClicked(true);">Select all</button>
-    </h2>
+    <h2>PVID 端口（入口默认 VLAN）<button type="button" style="margin-left:16px;font-size:11px;padding:4px 10px;" onclick="pvClicked(true);">全选</button></h2>
     <div id="pPorts" style="margin-bottom:20px;"></div>
-
-    <div>
-      <button type="button" id="vlan_sub" onclick="vlanSub();">Update / Create VLAN</button>
-    </div>
-    <script src="/vlan.js"></script>
-    <script src="/vlan_sub.js"></script>
-
-    <h2 style="margin-top:32px;">Configured VLANs</h2>
+    <div><button type="button" id="vlan_sub" onclick="vlanSub();">更新 / 创建 VLAN</button></div>
+    <script src="/vlan.js"></script><script src="/vlan_sub.js"></script>
+    <h2 style="margin-top:32px;">已配置 VLAN</h2>
     <table id="vlanTable" style="width:100%;">
-      <thead>
-        <tr>
-          <th>VLAN</th>
-          <th>Name</th>
-          <th>Members</th>
-          <th>Tagged</th>
-          <th>Untagged</th>
-          <th>PVID</th>
-          <th>Delete</th>
-        </tr>
-      </thead>
+      <thead><tr><th>VLAN</th><th>名称</th><th>成员端口</th><th>Tagged</th><th>Untagged</th><th>PVID</th><th>删除</th></tr></thead>
       <tbody id="vlanTableBody"></tbody>
     </table>
   </div>

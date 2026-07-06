@@ -1,40 +1,33 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FreeSwitchOS · EEE</title>
+  <title>FreeSwitchOS · 节能以太网</title>
   <link rel="stylesheet" href="style.css">
   <script src="/main.js"></script>
 </head>
 <body>
   <nav id="sidebar"></nav>
   <div class="main-wrap">
-    <h1>Energy-Efficient Ethernet (EEE)</h1>
+    <h1>节能以太网（EEE）</h1>
     <div id="ports"></div>
-
     <div style="display:flex;gap:10px;margin-bottom:20px;">
-      <button id="eee_enable" onclick="eeeSub(0, 1);">Enable EEE</button>
-      <button onclick="eeeSub(0, 0);" style="color:var(--amber);border-color:var(--amber);">Disable EEE</button>
+      <button id="eee_enable" onclick="eeeSub(0,1);">启用 EEE</button>
+      <button onclick="eeeSub(0,0);" style="color:var(--amb);border-color:var(--amb);">禁用 EEE</button>
     </div>
-
     <table id="eeetable" style="width:100%;max-width:820px;">
       <thead>
         <tr>
-          <th rowspan="2">Port</th>
-          <th colspan="3">Advertising</th>
-          <th colspan="3">Link-Partner Advertises</th>
-          <th rowspan="2">Active</th>
+          <th rowspan="2">端口</th>
+          <th colspan="3">本端通告</th>
+          <th colspan="3">对端通告</th>
+          <th rowspan="2">激活</th>
         </tr>
-        <tr>
-          <th>2.5G</th><th>1G</th><th>100M</th>
-          <th>2.5G</th><th>1G</th><th>100M</th>
-        </tr>
+        <tr><th>2.5G</th><th>1G</th><th>100M</th><th>2.5G</th><th>1G</th><th>100M</th></tr>
       </thead>
     </table>
-
-    <script src="/eee.js"></script>
-    <script src="/eee_sub.js"></script>
+    <script src="/eee.js"></script><script src="/eee_sub.js"></script>
   </div>
   <script src="/navigation.js"></script>
 </body>

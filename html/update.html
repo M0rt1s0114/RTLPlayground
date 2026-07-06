@@ -1,30 +1,79 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FreeSwitchOS · Firmware Update</title>
+  <title>FreeSwitchOS · 固件升级</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    /* 隐藏原生 file input，用自定义按钮代替 */
+    .file-input-wrap { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+    .file-input-wrap input[type=file] { position:absolute; width:0; height:0; opacity:0; pointer-events:none; }
+    .file-label {
+      display:inline-flex; align-items:center; gap:6px;
+      padding:6px 14px;
+      background:var(--sur2); color:var(--txt);
+      border:1px solid var(--bdr); border-radius:var(--r);
+      font-family:var(--ui); font-size:13px; font-weight:500;
+      cursor:pointer; transition:background .12s, border-color .12s;
+      user-select:none;
+    }
+    .file-label:hover { background:var(--acc); border-color:var(--acc); color:#fff; }
+    .file-label.selected { border-color:var(--grn); color:var(--grn); }
+    #file-name {
+      font-family:var(--mono); font-size:12px; color:var(--mut);
+      max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    }
+  </style>
 </head>
 <body>
   <nav id="sidebar"></nav>
   <div class="main-wrap">
-    <h1>Firmware Update</h1>
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:24px;max-width:500px;">
-      <p class="note" style="margin-bottom:16px;">Select a <code style="font-family:var(--font-mono);background:var(--surface2);padding:2px 6px;border-radius:4px;">.bin</code> firmware file to upload.</p>
-      <form enctype="multipart/form-data" action="/upload" method="POST">
+    <h1>固件升级</h1>
+    <div class="card" style="max-width:500px;">
+      <p class="note" style="margin-bottom:16px;">
+        选择 <code style="font-family:var(--mono);background:var(--sur2);padding:2px 6px;border-radius:4px;">.bin</code>
+        格式的固件文件后点击"上传并刷入"。
+      </p>
+      <form enctype="multipart/form-data" action="/upload" method="POST" id="uploadForm">
         <input type="hidden" name="MAX_FILE_SIZE" value="1000000">
-        <div style="margin-bottom:16px;">
-          <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px;">Firmware file</label>
-          <input name="uploadedfile" type="file" accept=".bin">
+        <div class="file-input-wrap">
+          <label class="file-label" id="fileLabel" for="uploadedfile">&#128190; 选择固件文件</label>
+          <input name="uploadedfile" type="file" accept=".bin" id="uploadedfile"
+                 onchange="onFileChange(this)">
+          <span id="file-name">未选择文件</span>
         </div>
-        <p class="warn">⚠ Do not power off the switch during the update process.</p>
+        <p class="warn">⚠ 刷写过程中请勿断电，否则可能造成设备变砖。</p>
         <div style="margin-top:12px;">
-          <input type="submit" value="Upload &amp; Flash Firmware">
+          <input type="submit" id="submitBtn" value="上传并刷入固件" disabled
+                 style="opacity:.4;cursor:not-allowed;">
         </div>
       </form>
     </div>
   </div>
   <script src="/navigation.js"></script>
+  <script>
+  function onFileChange(input) {
+    var label  = document.getElementById('fileLabel');
+    var nameEl = document.getElementById('file-name');
+    var btn    = document.getElementById('submitBtn');
+    if (input.files && input.files.length > 0) {
+      var name = input.files[0].name;
+      nameEl.textContent = name;
+      label.classList.add('selected');
+      label.textContent  = '✓ ' + name;
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      btn.style.cursor  = 'pointer';
+    } else {
+      nameEl.textContent = '未选择文件';
+      label.classList.remove('selected');
+      label.textContent  = '📁 选择固件文件';
+      btn.disabled = true;
+      btn.style.opacity = '.4';
+      btn.style.cursor  = 'not-allowed';
+    }
+  }
+  </script>
 </body>
 </html>

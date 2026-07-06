@@ -1,40 +1,31 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FreeSwitchOS · Port Statistics</title>
+  <title>FreeSwitchOS · 端口统计</title>
   <link rel="stylesheet" href="style.css">
   <script src="/main.js"></script>
 </head>
 <body>
   <nav id="sidebar"></nav>
-
-  <!-- Counters popup/modal -->
   <div id="popup" class="popup">
     <div class="popup-content">
-      <h2>Detailed Port Statistics</h2>
+      <h2>详细端口计数器</h2>
       <div id="popup_text"></div>
-      <div style="margin-top:16px;">
-        <button id="closePopup">Close</button>
-      </div>
+      <div style="margin-top:16px;"><button id="closePopup">关闭</button></div>
     </div>
   </div>
-
   <div class="main-wrap">
-    <h1>Port Statistics</h1>
+    <h1>端口统计</h1>
     <div id="ports"></div>
     <table id="statstable" style="width:100%;">
       <thead>
         <tr>
-          <th>Port</th>
-          <th>Name</th>
-          <th>Link</th>
-          <th>TX Good</th>
-          <th>TX Bad</th>
-          <th>RX Good</th>
-          <th>RX Bad</th>
-          <th>Counters</th>
+          <th>端口</th><th>名称</th><th>链路</th>
+          <th>发送（正常）</th><th>发送（异常）</th>
+          <th>接收（正常）</th><th>接收（异常）</th>
+          <th>详细计数</th>
         </tr>
       </thead>
       <script src="/stat.js"></script>
