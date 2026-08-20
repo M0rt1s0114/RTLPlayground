@@ -205,7 +205,8 @@ void vlan_create(void) __banked
 	print_string(", members: "); print_short(vlan_settings.members);
 	print_string(", tagged: "); print_short(vlan_settings.tagged); write_char('\n');
 
-	uint16_t a = (~vlan_settings.members) ^ vlan_settings.tagged ^ vlan_settings.members;
+	// Untagged mask: member ports that are not tagged members.
+	uint16_t a = vlan_settings.members & ~vlan_settings.tagged;
 
 	// On RTL8372, port-bits 0-2 must be 0, although they are not members
 	if (!machine_detected.isRTL8373) {
