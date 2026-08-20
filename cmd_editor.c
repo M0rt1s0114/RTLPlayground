@@ -40,8 +40,11 @@ void cmd_edit(void) __banked
 {
 	while (l != sbuf_ptr) {
 		if (sbuf[l] >= ' ' && sbuf[l] < 127) { // A printable character, copy to command line
-			if (cmd_line_len >= CMD_BUF_SIZE)
+			if (cmd_line_len >= CMD_BUF_SIZE - 1) {
+				// Buffer full: consume the byte instead of spinning on it.
+				l = (l + 1) & SBUF_MASK;
 				continue;
+			}
 			write_char(sbuf[l]);
 			// Shift buffer to right
 			for (uint8_t i = cmd_line_len; i > cursor; i--)
@@ -58,7 +61,7 @@ void cmd_edit(void) __banked
 		} else if (sbuf[l] == '\033') { // ESC-Sequence
 			// Wait until we have at least 3 characters including the ESC character in the serial buffer
 			if (((sbuf_ptr + SBUF_SIZE - l) & SBUF_MASK) < 3)
-				continue;
+				break; // let the main loop do its housekeeping while waiting
 			if (((sbuf_ptr > l ? sbuf_ptr - l : SBUF_SIZE + sbuf_ptr - l) >= 4)
 				   && sbuf[l] == '\033' && sbuf[(l + 1) & SBUF_MASK] == '[' && sbuf[(l + 2) & SBUF_MASK] == '3' && sbuf[(l + 3) & SBUF_MASK] == '~') { // DEL
 				if (cursor < cmd_line_len) {
@@ -68,6 +71,7 @@ void cmd_edit(void) __banked
 						cmd_buffer[i] = cmd_buffer[i+1];
 						write_char(cmd_buffer[i]);
 					}
+					cmd_buffer[cmd_line_len] = '\0';
 					for (uint8_t i = cursor; i < cmd_line_len; i++)
 						write_char('\010');
 				}
@@ -167,7 +171,7 @@ void cmd_edit(void) __banked
 				l &= SBUF_MASK;
 				continue;
 			} else { // An unknown or not yet complete Escape sequence: wait
-				continue;
+				break;
 			}
 		} else if (sbuf[l] == 127 || sbuf[l] == 8) {  // Backspace DEL or BS/^H
 			if (cursor > 0) {
@@ -179,9 +183,10 @@ void cmd_edit(void) __banked
 				for (uint8_t i = cursor; i <= cmd_line_len; i++)
 					write_char('\010');
 				cursor--;
-				for (uint8_t i = cursor; i <= cmd_line_len; i++)
+				for (uint8_t i = cursor; i < cmd_line_len; i++)
 					cmd_buffer[i] = cmd_buffer[i+1];
 				cmd_line_len--;
+				cmd_buffer[cmd_line_len] = '\0';
 			}
 		}
 		// If the command buffer is currently in use, we cannot copy to it
