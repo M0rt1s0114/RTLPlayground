@@ -214,7 +214,9 @@ void stp_setup(void) __banked
 		port_hello[i] = TIME_HELLO;
 		port_timers[i] = 0xa00;	// 10 sec in blocking state
 	}
-	sfr_data[1] |= 0x0f; // Do not block CPU-Port
+	// Keep physical port 8 in blocking state (bits 0-1); only the CPU port
+	// (bits 2-3) must stay in forwarding state.
+	sfr_data[1] |= 0x0c;
 	reg_write_m(RTL837X_MSTP_STATES); // R5310-000d555f 
 
 	print_reg(RTL837X_MSTP_STATES); write_char('\n');
