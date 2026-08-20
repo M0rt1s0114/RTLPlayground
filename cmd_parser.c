@@ -1621,6 +1621,9 @@ void cmd_parser(void) __banked
 			cmd_history_ptr = (cmd_history_ptr + i) & CMD_HISTORY_MASK;
 			__xdata uint16_t p = cmd_history_ptr;
 			cmd_history[cmd_history_ptr++] = '\n';
+			// Keep the write pointer inside the ring; the readers loop
+			// while (p != cmd_history_ptr) and never terminate for 1024.
+			cmd_history_ptr &= CMD_HISTORY_MASK;
 			do {
 				i--;
 				cmd_history[--p & CMD_HISTORY_MASK] = cmd_buffer[i];
