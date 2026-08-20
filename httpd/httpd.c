@@ -274,7 +274,13 @@ __xdata uint8_t *scan_header(__xdata uint8_t *p)
 		dbg_string("\nFound multipart\n");
 		content_type += 30;
 		uint8_t i = 0;
-		while (content_type[i] != '\r' && content_type[i] != '\n') {
+		while (content_type[i] != '\r' && content_type[i] != '\n' && content_type[i] != '\0') {
+			if (i >= sizeof(boundary) - 5) {
+				// Boundary does not fit into boundary[]: reject the
+				// whole request instead of writing past the buffer.
+				content_type = 0;
+				break;
+			}
 			boundary[i + 4] = content_type[i];
 			i++;
 		}
