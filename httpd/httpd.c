@@ -665,7 +665,10 @@ void httpd_appcall(void)
 				parse_short(q + 15);
 				send_vlan(short_parsed);
 			} else if (is_word(q, "/counters.json")) {
-				send_counters(q[20]-'0');
+				if (q[19] == '=' && q[20] >= '0' && q[20] <= '8')
+					send_counters(q[20]-'0');
+				else
+					send_bad_request();
 			} else if (is_word(q, "/eee.json")) {
 				send_eee();
 			} else if (is_word(q, "/bandwidth.json")) {
