@@ -148,6 +148,13 @@ uint8_t atoi_hex(uint8_t idx)
 			break;
 		}
 
+		if ((h_idx >> 1) >= sizeof(hexvalue)) {
+			// Too many hex digits for hexvalue[]: refuse the input
+			// instead of writing past the end of the array.
+			h_idx = 0;
+			break;
+		}
+
 		// swap hex nibbles
 		val = (val >> 4) | (val << 4);
 
