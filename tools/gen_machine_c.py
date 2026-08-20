@@ -23,7 +23,9 @@ except ImportError:
 # ── GPIO symbol table (rtl837x_pins.h values) ────────────────────────────────
 GPIO_SYMBOLS = {
     "GPIO_NA": 0xFF,
-    **{f"GPIO{i}_LED{i}": i for i in range(30)},
+    **{f"GPIO{i}_LED{i}": i for i in range(28)},
+    "GPIO28_SYS_LED": 28,
+    "GPIO29_GLB_RLDP_LED_EN": 29,
     "GPIO30_ACL_BIT3_EN": 30,
     "GPIO31_UART0_TX": 31, "GPIO32_UART0_RX": 32, "GPIO33_INT": 33,
     "GPIO34_MDC0": 34, "GPIO35_MDIO0": 35, "GPIO36_PWM_OUT": 36,
@@ -40,6 +42,7 @@ GPIO_SYMBOLS = {
     "GPIO57_PTP_TOD_OUT": 57, "GPIO58_PTP_PPS_OUT": 58,
     "GPIO59_PTP_TOD_IN": 59, "GPIO60_PTP_PPS_IN": 60,
     "GPIO61_SYNCELOCK0": 61, "GPIO62_SYNCELOCK1": 62,
+    "GPIO63_MDIO": 63,
 }
 
 # ── LED bit constants (rtl837x_leds.h) ───────────────────────────────────────
