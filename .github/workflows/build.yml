@@ -1,9 +1,9 @@
-name: Build Firmware
+name: Build firmware
 
 on:
   push:
-    branches: ["**"]
-    tags: ["v*"]
+    branches: ['**']
+    tags: ['v*']
   pull_request:
   workflow_dispatch:
     inputs:
@@ -17,94 +17,137 @@ on:
         required: false
         default: false
 
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
 jobs:
-  # ── 1. Determine which machines to build ──────────────────────────────────
+  # ── 1. Resolve the list of machine targets ────────────────────────────────
   setup:
     name: Resolve build matrix
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
+      - uses: actions/checkout@v6
       - name: Set matrix
         id: set-matrix
         run: |
           INPUT="${{ github.event.inputs.machine }}"
           if [ -n "$INPUT" ]; then
-            MATRIX="{\"machine\":[\"${INPUT}\"]}"
+            MACHINES="$INPUT"
           else
-            MACHINES=$(ls boards/*.yaml | sed 's|boards/||;s|\.yaml||' | tr '\n' ' ' | sed 's/ $//')
-            JSON="[$(echo "$MACHINES" | sed 's/ /","/g;s/^/"/;s/$/"/' )]"
-            MATRIX="{\"machine\":${JSON}}"
+            # every board definition under machine/ is a build target
+            MACHINES=$(ls machine/*.c | sed 's|machine/||;s|\.c$||' | sort)
           fi
-          echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
+          JSON=$(printf '%s\n' $MACHINES | sed 's/.*/"&"/' | paste -sd, -)
+          echo "matrix={\"machine\":[$JSON]}" >> "$GITHUB_OUTPUT"
 
-  # ── 2. Build every machine in parallel ────────────────────────────────────
+  # ── 2. Host-side unit tests (upstream test harness) ───────────────────────
+  test:
+    name: Host unit tests
+    runs-on: ubuntu-latest
+    container:
+      image: debian:trixie
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          path: branch
+      - name: Install dependencies
+        run: |
+          apt update
+          apt install make gcc sdcc xxd python-is-python3 libjson-c-dev zlib1g-dev -y
+      - name: Run the host-side unit tests
+        run: cd branch && make -C test
+
+  # ── 3. Compile every machine definition + board-definition drift check ────
+  machine-check:
+    name: Check all machine definitions
+    runs-on: ubuntu-latest
+    container:
+      image: debian:trixie
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          path: branch
+      - name: Install dependencies
+        run: |
+          apt update
+          apt install make gcc sdcc xxd python-is-python3 python3-yaml libjson-c-dev zlib1g-dev git -y
+      - name: Regenerate board definitions from YAML and verify no drift
+        run: cd branch && make boards && git diff --exit-code -- machine/
+      - name: Check that every machine definition can be compiled
+        run: cd branch && make machine_check
+
+  # ── 4. Build every machine in parallel, upload each firmware ──────────────
   build:
     name: Build · ${{ matrix.machine }}
     needs: setup
     runs-on: ubuntu-latest
     container:
       image: debian:trixie
-
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-
       - name: Install toolchain
         run: |
-          apt-get update -qq
-          apt-get install -y --no-install-recommends \
-            make gcc libc6-dev sdcc xxd python-is-python3 python3-yaml libjson-c-dev git ca-certificates
-
+          apt update
+          apt install make gcc sdcc xxd python-is-python3 python3-yaml libjson-c-dev zlib1g-dev git ca-certificates -y
+      - name: Regenerate board definitions from YAML
+        run: make boards
       - name: Build ${{ matrix.machine }}
-        run: make MACHINE="${{ matrix.machine }}"
-
+        run: make CI=1 MACHINE="${{ matrix.machine }}"
       - name: Locate firmware binary
         id: locate
         run: |
           BIN=$(find output/ -name "*.bin" ! -name "rtlplayground.bin" | head -1)
           echo "path=$BIN" >> "$GITHUB_OUTPUT"
           echo "name=$(basename "$BIN")" >> "$GITHUB_OUTPUT"
-
       - name: Upload firmware artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
           name: firmware-${{ matrix.machine }}
           path: ${{ steps.locate.outputs.path }}
           if-no-files-found: error
           retention-days: 30
 
-  # ── 3. Validate all board YAML files compile cleanly ──────────────────────
-  machine-check:
-    name: Validate all boards
+  # ── 5. Bank/web growth against main (informational) ───────────────────────
+  bank-growth:
+    name: Bank growth vs main
     runs-on: ubuntu-latest
     container:
       image: debian:trixie
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
+      - uses: actions/checkout@v6
         with:
-          fetch-depth: 0
-
-      - name: Install toolchain
+          path: branch
+      - uses: actions/checkout@v6
+        with:
+          path: main
+          ref: main
+      - name: Install dependencies
         run: |
-          apt-get update -qq
-          apt-get install -y --no-install-recommends \
-            make gcc libc6-dev sdcc xxd python-is-python3 python3-yaml libjson-c-dev git
+          apt update
+          apt install make gcc sdcc xxd python-is-python3 python3-yaml libjson-c-dev zlib1g-dev -y
+      - name: Build branch and main
+        run: |
+          cd branch && make CI=1 MACHINE="KP_9000_6XHML_X2" && cp output/KP_9000_6XHML_X2/rtlplayground.map /tmp/branch.map
+          cd ../main && make CI=1 MACHINE="KP_9000_6XHML_X2" && cp output/KP_9000_6XHML_X2/rtlplayground.map /tmp/main.map
+      - name: Report bank and web size growth
+        run: |
+          sed -rn 's/^([XCD]SEG|(BANK[0-9])).*=\s+([0-9]+)\. bytes.*$/MAIN_\1=\3/p' /tmp/main.map | sort -u >> "$GITHUB_ENV"
+          sed -rn 's/^([XCD]SEG|(BANK[0-9])).*=\s+([0-9]+)\. bytes.*$/BRANCH_\1=\3/p' /tmp/branch.map | sort -u >> "$GITHUB_ENV"
+          du -sb main/output/KP_9000_6XHML_X2/html_min | awk '{print "MAIN_WEB="$1}' >> "$GITHUB_ENV"
+          du -sb branch/output/KP_9000_6XHML_X2/html_min | awk '{print "BRANCH_WEB="$1}' >> "$GITHUB_ENV"
+          echo "### Bank / web growth" >> "$GITHUB_STEP_SUMMARY"
+          env | grep -E '^(MAIN|BRANCH)_' | sort >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Check all boards
-        run: make machine_check MACHINE=machine_check_placeholder
-
-  # ── 4. Bundle every .bin into one release archive ─────────────────────────
+  # ── 6. Bundle every firmware into one release archive ─────────────────────
   release:
     name: Create GitHub Release
     needs: [build, machine-check]
@@ -114,21 +157,16 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
+      - uses: actions/checkout@v6
       - name: Download all firmware artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v4
         with:
           path: release-bins
           pattern: firmware-*
           merge-multiple: true
-
       - name: List collected binaries
         run: ls -lh release-bins/
-
       - name: Set release tag
         id: tag
         run: |
@@ -147,15 +185,13 @@ jobs:
               echo "prerelease=false" >> "$GITHUB_OUTPUT"
             fi
           fi
-
       - name: Create release archive
         run: |
           TAG="${{ steps.tag.outputs.tag }}"
           zip "RTLPlayground-firmware-${TAG}-all-machines.zip" release-bins/*.bin
           sha256sum release-bins/*.bin > "RTLPlayground-firmware-${TAG}-SHA256SUMS.txt"
-
       - name: Publish release
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@v2
         with:
           name: ${{ steps.tag.outputs.name }}
           tag_name: ${{ steps.tag.outputs.tag }}

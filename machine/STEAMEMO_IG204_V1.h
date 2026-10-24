@@ -1,0 +1,7 @@
+#ifndef _MACHINE_STEAMEMO_IG204_V1_H_
+#define _MACHINE_STEAMEMO_IG204_V1_H_
+
+#define MACHINE_MODEL "Steamemo IG204 V1"
+#define MACHINE_CHIPSET RTL8372
+
+#endif

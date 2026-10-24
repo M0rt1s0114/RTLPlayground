@@ -18,9 +18,9 @@
 #pragma codeseg BANK1
 #pragma constseg BANK1
 
-extern __code uint8_t * __code hex;
-extern __code uint16_t bit_mask[16];
-extern __code struct machine machine;
+extern __code const uint8_t * __code const hex;
+extern __code const uint16_t bit_mask[16];
+extern __code const struct machine machine;
 extern __xdata uint8_t sfr_data[4];
 extern __xdata uint16_t vlan_ptr;
 extern __xdata uint8_t vlan_names[VLAN_NAMES_SIZE];
@@ -30,9 +30,16 @@ __xdata	uint32_t l2_head;
 
 __xdata struct vlan_settings vlan_settings;
 
-void port_mirror_set(register uint8_t port, __xdata uint16_t rx_pmask, __xdata uint16_t tx_pmask) __banked
+// Wait for the TABLE ready
+static void wait_table_ready(void)
 {
-	print_string("\nport_mirror_set called \n");
+	do {
+		reg_read(RTL837X_TBL_CTRL);
+	} while (SFR_DATA_0 & TBL_EXECUTE);
+}
+
+void port_mirror_set(uint8_t port, __xdata uint16_t rx_pmask, __xdata uint16_t tx_pmask) __banked
+{
 	print_string("Mirroring port: "); print_byte(port); print_string(" with rx-mask: ");
 	print_short(rx_pmask); print_string(", tx mask: "); print_short(tx_pmask);
 	write_char('\n');
@@ -44,14 +51,13 @@ void port_mirror_set(register uint8_t port, __xdata uint16_t rx_pmask, __xdata u
 
 void port_mirror_del(void) __banked
 {
-	print_string("\nport_mirror_del called \n");
 	REG_SET(RTL837x_MIRROR_CTRL, 0);
 }
 
 
 bool port_ingress_filter(__xdata uint8_t port, __xdata vlan_ingress_mode_t type) __banked
 {
-	if (port > 9 || type >= VLAN_INVALID) {
+	if (port > CPU_PORT || type >= VLAN_INVALID) {
 		print_string("Invalid port or ingress filter type\n");
 		return false;
 	}
@@ -87,18 +93,32 @@ vlan_ingress_mode_t port_ingress_filter_get(__xdata uint8_t port) __banked
 /*
  * Define a Primary VLAN ID for a port 
 */
-void port_pvid_set(uint8_t port, __xdata uint16_t pvid) __banked
+static void port_pvid_write(uint8_t port, __xdata uint16_t pvid)
 {
 	// r4e1c:00001001 R4e1c-000017d0 r6738:00000000 R6738-00000000 (no filtering)
-	print_string("\nport_pvid_set called \n");
 	uint16_t reg = RTL837x_PVID_BASE_REG + ((port >> 1) << 2);
 
 	reg_read_m(reg);
 	if (port & 0x1) {
-		REG_WRITE(reg, sfr_data[0], pvid >> 4, sfr_data[2] & 0x0f | (pvid << 4), sfr_data[3]);
+		REG_WRITE(reg, sfr_data[0], pvid >> 4, (sfr_data[2] & 0x0f) | (pvid << 4), sfr_data[3]);
 	} else {
-		REG_WRITE(reg, sfr_data[0], sfr_data[1], sfr_data[2] & 0xf0 | (pvid >> 8), pvid);
+		REG_WRITE(reg, sfr_data[0], sfr_data[1], (sfr_data[2] & 0xf0) | (pvid >> 8), pvid);
 	}
+}
+
+void port_pvid_set(uint8_t port, __xdata uint16_t pvid) __banked
+{
+	uint8_t lag = port_lag_of(port);
+
+	if (lag == PORT_LAG_NONE) {
+		port_pvid_write(port, pvid);
+		return;
+	}
+
+	uint16_t members = port_lag_members_get(lag);
+	for (uint8_t i = 0; i < 10; i++)
+		if ((members >> i) & 1)
+			port_pvid_write(i, pvid);
 }
 
 uint16_t port_pvid_get(uint8_t port) __banked
@@ -115,7 +135,9 @@ uint16_t port_pvid_get(uint8_t port) __banked
 
 void vlan_delete(uint16_t vlan) __banked
 {
-	print_string("\nvlan_delete called \n"); print_short(vlan);
+	if (!vlan || vlan >= 0xfff)
+		return;
+
 	vlan_name_remove(vlan);
 	REG_WRITE(RTL837x_TBL_DATA_IN_A, 0, 0, 0, 0);
 	REG_WRITE(RTL837X_TBL_CTRL, vlan >> 8, vlan, TBL_VLAN, TBL_WRITE | TBL_EXECUTE);
@@ -159,22 +181,22 @@ void vlan_name_remove(uint16_t vlan) __banked
  * Reads VLAN information from VLAN table
  * Returns data in sfr_data
  */
-int8_t vlan_get(register uint16_t vlan) __banked
+int8_t vlan_get(uint16_t vlan) __banked
 {
 	if (vlan >= 0xfff) // VLAN 4095 is special
 		return -1;
 
 	REG_WRITE(RTL837X_TBL_CTRL, vlan >> 8, vlan, TBL_VLAN, TBL_EXECUTE);
-	do {
-		reg_read_m(RTL837X_TBL_CTRL);
-	} while (sfr_data[3] & TBL_EXECUTE);
+
+	wait_table_ready();
+
 	reg_read_m(RTL837x_L2_DATA_OUT_A);
 
 	return 0;
 }
 
 
-__xdata uint16_t vlan_name(register uint16_t vlan) __banked
+__xdata uint16_t vlan_name(uint16_t vlan) __banked
 {
 	__xdata int16_t i = 0;
 	__xdata uint8_t begin = 1;
@@ -197,11 +219,16 @@ __xdata uint16_t vlan_name(register uint16_t vlan) __banked
  */
 void vlan_create(void) __banked
 {
+	if (!vlan_settings.vlan || vlan_settings.vlan >= 0xfff) {
+		print_string("\nInvalid VLAN: "); print_short(vlan_settings.vlan); write_char('\n');
+		return;
+	}
+
 	// For now, the CPU-port is always a tagged member:
 	vlan_settings.members |= 0x0200; // Set 10th bit
 	vlan_settings.tagged |= 0x0200;
 
-	print_string("\nvlan_create called\nvlan: "); print_short(vlan_settings.vlan);
+	print_string("vlan: "); print_short(vlan_settings.vlan);
 	print_string(", members: "); print_short(vlan_settings.members);
 	print_string(", tagged: "); print_short(vlan_settings.tagged); write_char('\n');
 
@@ -216,10 +243,9 @@ void vlan_create(void) __banked
 	// Initialize VLAN table with VLAN 1
 	REG_WRITE(RTL837x_TBL_DATA_IN_A, 0x02, (a >> 6) & 0x0f, (a << 2) | (vlan_settings.members >> 8), vlan_settings.members);
 	REG_WRITE(RTL837X_TBL_CTRL, vlan_settings.vlan >> 8, vlan_settings.vlan, TBL_VLAN, TBL_WRITE | TBL_EXECUTE);
-	do {
-		reg_read_m(RTL837X_TBL_CTRL);
-	} while (sfr_data[3] & TBL_EXECUTE);
-	print_string("vlan_create done \n");
+
+	wait_table_ready();
+
 }
 
 
@@ -232,7 +258,6 @@ void vlan_create(void) __banked
  */
 void vlan_setup(void) __banked
 {
-	print_string("\nvlan_setup called \n");
 
 	// No VLAN names set up so far
 	vlan_ptr = 0;
@@ -242,12 +267,11 @@ void vlan_setup(void) __banked
 	REG_SET(RTL837x_TBL_DATA_IN_A, machine_detected.isRTL8373? 0x0007ffff : 0x0007e3f8);
 
 	REG_SET(RTL837X_TBL_CTRL, 0x00010303);
-	do {
-		reg_read_m(RTL837X_TBL_CTRL);
-	} while (sfr_data[3] & TBL_EXECUTE);
+
+	wait_table_ready();
 
 	// Set PVID 1 for every port. TODO: Skip unused ports!
-	for (uint8_t i = machine.min_port; i <= machine.max_port + 1; i++) {  // Do this also for the CPU port (+1)
+	for (uint8_t i = MACHINE_MIN_PORT; i <= MACHINE_MAX_PORT + 1; i++) {  // Do this also for the CPU port (+1)
 		uint16_t reg = RTL837x_PVID_BASE_REG + ((i >> 1) << 2);
 #ifdef DEBUG
 		print_byte(i); write_char(':'); write_char(' '); print_short(reg); write_char('=');
@@ -255,7 +279,7 @@ void vlan_setup(void) __banked
 #endif
 		reg_read_m(reg);
 		if (i & 0x1) {
-			REG_WRITE(reg, sfr_data[0], 0, sfr_data[2] & 0x0f | 0x10, sfr_data[3]);
+			REG_WRITE(reg, sfr_data[0], 0, (sfr_data[2] & 0x0f) | 0x10, sfr_data[3]);
 		} else {
 			REG_WRITE(reg, sfr_data[0], sfr_data[1], sfr_data[2] & 0xf0, 0x01);
 		}
@@ -287,9 +311,8 @@ void vlan_setup(void) __banked
 	REG_SET(RTL837x_TBL_DATA_IN_A, machine_detected.isRTL8373? 0x0207ffff : 0x0207e3f8);	// 02: Entry valid, 7...: membership
 
 	REG_SET(RTL837X_TBL_CTRL, 0x00010303);	// Write VLAN 1
-	do {
-		reg_read_m(RTL837X_TBL_CTRL);
-	} while (sfr_data[3] & TBL_EXECUTE);
+
+	wait_table_ready();
 
 #ifdef DEBUG
 	print_string("\nvlan_setup, REG 0x6738: "); print_reg(0x6738);
@@ -302,7 +325,20 @@ void vlan_setup(void) __banked
 	print_string("\nvlan_setup, REG 0x4f4c: "); print_reg(0x4f4c);
 #endif
 
-	print_string("vlan_setup done \n");
+}
+
+
+/*
+ * Forget the dynamic L2 entries learned on one port.
+ */
+void port_l2_forget_port(uint8_t port) __banked
+{
+	REG_SET(RTL837x_L2_TBL_FLUSH_CNF, 0x0);	/* port-based, dynamic entries */
+	REG_SET(RTL837x_L2_TBL_FLUSH_CTRL, L2_TBL_FLUSH_EXEC | (((uint16_t)1) << port));
+
+	do {
+		reg_read(RTL837x_L2_TBL_FLUSH_CTRL);
+	} while (SFR_DATA_16);
 }
 
 
@@ -311,20 +347,21 @@ void vlan_setup(void) __banked
  */
 uint8_t port_l2_forget(void) __banked
 {
-	print_string("\nport_l2_forget called\n");
 	// Configure the entries to be flushed:
 	// port-based (bits 0-1 are 0 and dynamic entries, bit 2 specifies dynamic entries
 	REG_SET(RTL837x_L2_TBL_FLUSH_CNF, 0x0);
 
 	// Flush L2 table for all ports by setting the ports and the flush-exec bit (bit 16)
-	REG_SET(RTL837x_L2_TBL_FLUSH_CTRL, L2_TBL_FLUSH_EXEC | (machine_detected.isRTL8373 ? PMASK_9 : PMASK_6));
+	uint16_t mask = PMASK_6;
+	if (machine_detected.isRTL8373)
+		mask = PMASK_9;
+	REG_SET(RTL837x_L2_TBL_FLUSH_CTRL, L2_TBL_FLUSH_EXEC | mask);
 
 	// Wait for flush completed
 	do {
 		reg_read_m(RTL837x_L2_TBL_FLUSH_CTRL);
 	} while (sfr_data[1]);
 
-	print_string("port_l2_forget done\n");
 	return 0;
 }
 
@@ -332,22 +369,21 @@ uint8_t port_l2_forget(void) __banked
 void port_l2_learned(void) __banked
 {
 	// Whait for any table action to be finished
-	do {
-		reg_read_m(RTL837X_TBL_CTRL);
-	} while (sfr_data[3] & 0x01);
+	wait_table_ready();
+
 	print_string("\n\tMAC\t\tVLAN\ttype\tport\n");
 	__xdata uint16_t entry = 0x0000;
 	__xdata uint16_t first_entry = 0xffff; // Table does not have that many entries
 
 	while (1) {
 		uint8_t port = 0;
+		uint8_t lag;
 		reg_read_m(RTL837x_TBL_DATA_0);
 		REG_WRITE(RTL837x_TBL_DATA_0, sfr_data[0], sfr_data[1],sfr_data[2] | 0xc0, sfr_data[3]);
 
 		REG_WRITE(RTL837X_TBL_CTRL, (entry >> 8) & 0xf, entry, TBL_L2_UNICAST, TBL_EXECUTE);
-		do {
-			reg_read_m(RTL837X_TBL_CTRL);
-		} while (sfr_data[3] & TBL_EXECUTE);
+
+		wait_table_ready();
 
 		reg_read_m(RTL837x_TBL_DATA_0);
 		entry = (((uint16_t)sfr_data[2] & 0x0f) << 8) | sfr_data[3];
@@ -376,16 +412,19 @@ void port_l2_learned(void) __banked
 
 			// type
 			reg_read_m(RTL837x_L2_DATA_OUT_C);
-			if (sfr_data[2] & 0x1)
+			if (sfr_data[1] & 0x1)
 				print_string("\tstatic\t");
 			else
 				print_string("\tlearned\t");
 
 			port |= (sfr_data[3] & 0x3) << 2;
-			if (port < 9)
-				write_char(machine.log_to_phys_port[port] + '0');
-			else
-				print_string("CPU");
+			lag = port_lag_of(port);
+			if (lag == PORT_LAG_NONE) {
+				print_phys_port(port);
+			} else {
+				print_string("LAG");
+				itoa(lag + 1);
+			}
 		}
 
 		entry++;
@@ -395,35 +434,85 @@ void port_l2_learned(void) __banked
 
 
 /*
+ * Static L2 multicast entry for the link-local group 01:80:C2:00:00:<mac_last>
+ * in VLAN `vid`, with member portmask `pmask` (bit 9 = CPU port).
+ */
+
+void port_l2mc_set(uint8_t mac_last, __xdata uint16_t vid, __xdata uint16_t pmask) __banked
+{
+	wait_table_ready();
+
+	REG_WRITE(RTL837x_TBL_DATA_IN_A, 0xc2, 0x00, 0x00, mac_last);
+	REG_WRITE(RTL837x_TBL_DATA_IN_B, 0x20 | (vid >> 8) | ((pmask & 0x3) << 6), vid, 0x01, 0x80);
+	REG_WRITE(RTL837x_TBL_DATA_IN_C, 0, 0, 0, pmask >> 2);
+	REG_WRITE(RTL837X_TBL_CTRL, 0, 0, TBL_L2_UNICAST, TBL_WRITE | TBL_EXECUTE);
+
+	wait_table_ready();
+}
+
+
+/*
  * Basic L2 configuration such as time to forget an entry
  */
 void port_l2_setup(void) __banked
 {
-	print_string("\nport_l2_setup called\n");
 
 	port_l2_forget();
 
-	for (uint8_t i = machine.min_port; i <= machine.max_port; i++) {
+	for (uint8_t i = MACHINE_MIN_PORT; i <= MACHINE_MAX_PORT; i++) {
 		// Limit the number of automatically learned MAC-Entries per port to 0x1040
-		uint16_t reg = RTL837X_L2_LRN_PORT_CONSTRAINT + (i << 2);
-		REG_SET(reg, 0x00001040);
+		uint8_t idx = (i << 2);
+		REG_SET(RTL837X_L2_LRN_PORT_CONSTRAINT + idx, 0x00001040);
 
 		// All ports may communicate with each other and CPU-Port
-		reg = RTL837X_PORT_ISOLATION_BASE + (i << 2);
-		REG_SET(reg, PMASK_CPU | (machine_detected.isRTL8373? PMASK_9 : PMASK_6));
+		uint16_t mask = PMASK_CPU | PMASK_6;
+		if (machine_detected.isRTL8373)
+			mask = PMASK_CPU | PMASK_9;
+		REG_SET(RTL837X_PORT_ISOLATION_BASE + idx, mask);
 	}
 	// When maximim entries learned, then simply flood the packet
 	reg_bit_set(RTL837X_L2_LRN_PORT_CONSTRT_ACT, 0);
 
-	print_string("\nport_l2_setup done\n");
+}
+
+
+void port_media_show(uint8_t port) __banked
+{
+	uint8_t pause;
+
+	if (!machine.is_sfp[port]) {
+		reg_read_m(RTL837X_REG_LINKS_STS);
+		if (sfr_data[(port / 8) + 1] >> (port % 8) & 1) {
+			print_string("Link role: ");
+			reg_read_m(RTL837X_MAC_MSTR_SLV_STS);
+			if (sfr_data[3 - (port >> 3)] & (1 << (port & 7)))
+				print_string("master\n");
+			else
+				print_string("slave\n");
+		}
+	}
+
+	print_string("Pause negotiated:");
+	reg_read_m(RTL837X_MAC_TX_PAUSE_STS);
+	pause = sfr_data[3 - (port >> 3)] & (1 << (port & 7));
+	if (pause)
+		print_string(" TX");
+	reg_read_m(RTL837X_MAC_RX_PAUSE_STS);
+	if (sfr_data[3 - (port >> 3)] & (1 << (port & 7))) {
+		print_string(" RX");
+		pause = 1;
+	}
+	if (!pause)
+		print_string(" none");
+	write_char('\n');
 }
 
 
 void port_stats_print(void) __banked
 {
-	print_string("\nPort\tState\tLink\tTxGood\t\tTxBad\t\tRxGood\t\tRxBad\n");
-	for (uint8_t i = machine.min_port; i <= machine.max_port; i++) {
-		write_char('0' + machine.log_to_phys_port[i]); write_char('\t');
+	print_string("\nPort\tState\tLink\tTxGood\t\tTxBad\t\tRxGood\t\tRxBad\t\tMACs\n");
+	for (uint8_t i = MACHINE_MIN_PORT; i <= MACHINE_MAX_PORT; i++) {
+		print_phys_port(i); write_char('\t');
 
 		if (!machine.is_sfp[i]) {
 			phy_read(i, PHY_MMD31, 0xa610);
@@ -495,21 +584,24 @@ void port_stats_print(void) __banked
 
 		STAT_GET(STAT_COUNTER_ERR_PKTS, i);
 		print_reg(RTL837X_STAT_V_HIGH); write_char('\t');
+
+		reg_read(RTL837X_L2_LRN_PORT_CONSTRT_CNT + (i << 2));
+		itoa_short(SFR_DATA_U16 & L2_LRN_PORT_CNT_MASK);
 		print_string("\n");
 	}
 }
 
 
-void port_isolate(register uint8_t port, __xdata uint16_t pmask) __banked
+void port_isolate(uint8_t port, __xdata uint16_t pmask) __banked
 {
-	if (port <= machine.max_port)
+	if (port <= MACHINE_MAX_PORT)
 		REG_SET(RTL837X_PORT_ISOLATION_BASE + (port << 2), pmask);
 }
 
 
-uint16_t port_isolation_get(register uint8_t port) __banked
+uint16_t port_isolation_get(uint8_t port) __banked
 {
-	if (port > machine.max_port)
+	if (port > MACHINE_MAX_PORT)
 		return 0;
 
 	reg_read_m(RTL837X_PORT_ISOLATION_BASE + (port << 2));
@@ -522,12 +614,12 @@ void port_eee_enable(__xdata uint8_t port,__xdata uint8_t speed) __banked
 
 	if (machine.is_sfp[port])
 	{
-		print_string("EEE can't be enabled for SFP port "); print_byte(port); print_string("\n");
+		print_string("EEE can't be enabled for SFP port "); print_phys_port(port); print_string("\n");
 		return;
 	}
 
 	REG_SET(RTL837X_EEE_CTRL_BASE + (port << 8), EEE_RX_ENABLE | EEE_TX_ENABLE);
-	print_string("EEE on for "); print_byte(port); print_string(" speed "); 
+	print_string("EEE on for "); print_phys_port(port); print_string(" speed "); 
 	// Enable all speeds up to the specified speed
 	if (speed & EEE_100) {
 			print_string("100m\n");
@@ -586,7 +678,7 @@ void port_eee_disable(uint8_t port) __banked
 	if (machine.is_sfp[port])
 		return;
 
-	print_string("EEE off for "); print_byte(port); write_char('\n');
+	print_string("EEE off for "); print_phys_port(port); write_char('\n');
 	REG_SET(RTL837X_EEE_CTRL_BASE + (port << 8), 0);
 	// Disable EEE advertisement for 100/1000BASE-T via EEE Advertisement Reg
 	phy_write(port, PHY_MMD_AN, PHY_EEE_ADV, 0);
@@ -598,7 +690,7 @@ void port_eee_disable(uint8_t port) __banked
 
 void port_eee_status(uint8_t port) __banked
 {
-	print_string("Port: "); write_char('0' + machine.log_to_phys_port[port]);
+	print_string("Port: "); print_phys_port(port);
 	print_string(": ");
 	if (machine.is_sfp[port]) {
 		print_string("SFP\n");
@@ -683,14 +775,14 @@ void port_eee_status(uint8_t port) __banked
 
 void port_eee_enable_all(__xdata uint8_t speed) __banked
 {
-	for (uint8_t i = machine.min_port; i <= machine.max_port; i++) {
+	for (uint8_t i = MACHINE_MIN_PORT; i <= MACHINE_MAX_PORT; i++) {
 		if (i == 3 && machine.n_10g) {
 			port_eee_enable(i, speed);
 		} else if (i == 8 && machine.n_10g == 2) {
 			port_eee_enable(i, speed);
 		} else {
 			if (speed & EEE_10G)
-				port_eee_enable(i, speed & EEE_NORESET | EEE_2G5);
+				port_eee_enable(i, (speed & EEE_NORESET) | EEE_2G5);
 			else
 				port_eee_enable(i, speed);
 		}
@@ -700,7 +792,7 @@ void port_eee_enable_all(__xdata uint8_t speed) __banked
 
 void port_eee_disable_all(void) __banked
 {
-	for (uint8_t i = machine.min_port; i <= machine.max_port; i++) {
+	for (uint8_t i = MACHINE_MIN_PORT; i <= MACHINE_MAX_PORT; i++) {
 		port_eee_disable(i);
 	}
 }
@@ -708,7 +800,7 @@ void port_eee_disable_all(void) __banked
 
 void port_eee_status_all(void) __banked
 {
-	for (uint8_t i = machine.min_port; i <= machine.max_port; i++) {
+	for (uint8_t i = MACHINE_MIN_PORT; i <= MACHINE_MAX_PORT; i++) {
 		port_eee_status(i);
 	}
 }
@@ -726,6 +818,27 @@ void port_rldp_on(__xdata uint16_t p_ms)
 
 
 /*
+ * Reads the member port bitmask of a Link Aggregation Group.
+ * The groups have numbers 0-3; bit n is set when logical port n is a member.
+ * The bitmask reflects what the hardware holds, so it covers groups set up
+ * statically and groups a protocol brought up, without either having to say so.
+ */
+uint16_t port_lag_members_get(uint8_t lag) __banked
+{
+	reg_read(RTL837X_TRK_MBR_CTRL_BASE + (lag << 2));
+	return ((uint16_t)SFR_DATA_8 << 8) | SFR_DATA_0;
+}
+
+uint8_t port_lag_of(uint8_t port) __banked
+{
+	for (uint8_t lag = 0; lag < 4; lag++)
+		if ((port_lag_members_get(lag) >> port) & 1)
+			return lag;
+	return PORT_LAG_NONE;
+}
+
+
+/*
  * Configure LAGs
  * Sets the members via port bitmask of a given Link Aggregation Group
  * The groups have numbers 0-3
@@ -736,11 +849,14 @@ void port_lag_members_set(__xdata uint8_t lag, __xdata uint16_t members) __banke
 {
 	print_string("port_lag_members_set, lag: "); print_byte(lag); print_string(", members: "); print_short(members);
 	write_char('\n');
-	if (lag > 3)
-		print_string("Link aggregation group must be 0-3!\n");
+	if (lag > 3) {
+		print_string("Link aggregation group out of range\n");
+		return;
+	}
 	reg_read_m(RTL837X_TRK_HASH_CTRL_BASE + (lag << 2));
-	if (!(sfr_data[0] | sfr_data [1] | sfr_data [2] | sfr_data [3]))
-		REG_SET(RTL837X_TRK_HASH_CTRL_BASE, LAG_HASH_DEFAULT);
+	if (!(sfr_data[0] | sfr_data[1] | sfr_data[2])
+	    && (sfr_data[3] == LAG_HASH_RESET || sfr_data[3] == 0))
+		REG_SET(RTL837X_TRK_HASH_CTRL_BASE + (lag << 2), LAG_HASH_DEFAULT);
 	REG_WRITE(RTL837X_TRK_MBR_CTRL_BASE + (lag << 2), 0, 0, members >> 8, members & 0xff);
 }
 
@@ -753,8 +869,10 @@ void port_lag_hash_set(__xdata uint8_t lag, __xdata uint8_t hash_bits) __banked
 {
 	print_string("port_lag_hash_set, lag: "); print_byte(lag); print_string(", hash: "); print_byte(hash_bits);
 	write_char('\n');
-	if (lag > 3)
-		print_string("Link aggregation group must be 0-3!\n");
+	if (lag > 3) {
+		print_string("Link aggregation group out of range\n");
+		return;
+	}
 	REG_WRITE(RTL837X_TRK_HASH_CTRL_BASE + (lag << 2), 0, 0, 0, hash_bits);
 }
 
@@ -775,16 +893,6 @@ void print_port_ingress_filter_mode(vlan_ingress_mode_t mode) __banked
 	}
 }
 
-static void print_phys_port(uint8_t port) __banked
-{
-	if (port >= machine.min_port && port <= machine.max_port)
-		write_char(machine.log_to_phys_port[port] + '0');
-	else if (port == 9)
-		write_char('9');
-	else
-		write_char('?');
-}
-
 void print_vlan_ingress_port(uint8_t log_port) __banked
 {
 	print_phys_port(log_port);write_char('\t');
@@ -800,7 +908,7 @@ void vlan_dump(void) __banked
 {
 	print_string("Ingress VLAN configuration:\n");
 	print_string("Port\tPVID\tType\tFiltering\n");
-	for (uint8_t port = machine.min_port; port <= machine.max_port; port++) {
+	for (uint8_t port = MACHINE_MIN_PORT; port <= MACHINE_MAX_PORT; port++) {
 		print_vlan_ingress_port(port);
 	}
 	print_vlan_ingress_port(9);
@@ -813,21 +921,73 @@ void vlan_dump(void) __banked
 
 
 /** Set the ingress VLAN filtering */
-bool port_ingress_vlan_filter_set(__xdata uint8_t port, __xdata bool enabled) __banked
+bool port_ingress_vlan_filter_set(uint8_t port, __xdata bool enabled) __banked
 {
-	if (port < machine.min_port || port > machine.max_port && port != 9) {
+	if (!MACHINE_PORT_VALID(port) && port != CPU_PORT) {
 		return false;
 	}
-	reg_bit_set(RTL837X_VLAN_PORT_IGR_FLTR, port);
+	if (enabled)
+		reg_bit_set(RTL837X_VLAN_PORT_IGR_FLTR, port);
+	else
+		reg_bit_clear(RTL837X_VLAN_PORT_IGR_FLTR, port);
+
 	return true;
 }
 
 /** Get the ingress VLAN filtering status */
-bool port_ingress_vlan_filter_get(__xdata uint8_t port) __banked
+bool port_ingress_vlan_filter_get(uint8_t port) __banked
 {
-	if (port < machine.min_port || port > machine.max_port && port != 9) {
+	if (!MACHINE_PORT_VALID(port) && port != CPU_PORT) {
 		return false;
 	}
 
 	return reg_bit_test(RTL837X_VLAN_PORT_IGR_FLTR, port);
+}
+
+// C1 bit 0: static (no aging); age at C3[4:2] must be non-zero or the
+// entry is invisible to lookup
+static void l2_mgmt_entry_fill(__xdata uint8_t *mac, __xdata uint16_t vlan)
+{
+	REG_WRITE(RTL837x_TBL_DATA_IN_A, mac[2], mac[3], mac[4], mac[5]);
+	REG_WRITE(RTL837x_TBL_DATA_IN_B, 0x20 | ((CPU_PORT & 0x3) << 6) | (vlan >> 8),
+		  vlan & 0xff, mac[0], mac[1]);
+	REG_WRITE(RTL837x_TBL_DATA_IN_C, 0x00, 0x01, 0x00, (7 << 2) | (CPU_PORT >> 2));
+}
+
+static void l2_mgmt_tbl_prepare(void)
+{
+	reg_read_m(RTL837x_TBL_DATA_0);
+	sfr_data[2] &= 0x3f;
+	sfr_data[1] &= 0xf8;
+	reg_write_m(RTL837x_TBL_DATA_0);
+}
+
+/** Pin the management MAC to the CPU port; remove_entry deletes it */
+void port_l2_static_mgmt(__xdata uint8_t *mac, __xdata uint16_t vlan, __xdata bool remove_entry) __banked
+{
+	wait_table_ready();
+
+	// vlan 0 = management VLAN disabled: untagged management resolves in
+	// VLAN 1; clients in other VLANs keep their learned entry and age as before
+	if (!vlan)
+		vlan = 1;
+	l2_mgmt_entry_fill(mac, vlan);
+	l2_mgmt_tbl_prepare();
+	if (remove_entry) {
+		// a search miss returns index 0, not a slot
+		REG_WRITE(RTL837X_TBL_CTRL, 0x00, 0x00, TBL_L2_UNICAST, TBL_EXECUTE);
+		wait_table_ready();
+		reg_read_m(RTL837x_TBL_DATA_0);
+		if (!(sfr_data[2] & 0x10))
+			return;
+		sfr_data[1] |= 0x04; // CLEAR-entry
+		reg_write_m(RTL837x_TBL_DATA_0);
+		__xdata uint16_t idx = (((uint16_t)sfr_data[2] & 0x0f) << 8) | sfr_data[3];
+		REG_WRITE(RTL837X_TBL_CTRL, idx >> 8, idx & 0xff, TBL_L2_UNICAST, TBL_WRITE | TBL_EXECUTE);
+	} else {
+		// method-0 write: the hardware hashes the key and places the entry
+		REG_WRITE(RTL837X_TBL_CTRL, 0x00, 0x00, TBL_L2_UNICAST, TBL_WRITE | TBL_EXECUTE);
+	}
+
+	wait_table_ready();
 }

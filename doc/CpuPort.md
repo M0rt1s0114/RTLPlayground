@@ -34,6 +34,21 @@ Next, transfer the actual packet over by repeating the SFR function with a
 pointer to the frame on the ASIC directly after the frame header and a
 length as given by the length in the frame header + 7, again divided by 8.
 
+The RX ring's inclusive last slot is configured as `0x4ff`, giving a byte
+range of `0x0000` through `0x27ff`. If the descriptor occupies the last slot
+at `0x27f8`, its payload starts at `0x0000`, not `0x2800`. The RX copy code
+normalizes that starting address before DMA. It relies on the hardware to
+wrap transfers that start inside the ring and cross its end, as observed
+on SWTGW218AS. Programming an initial address of `0x2800` does not wrap
+and can instead read zeros or stale TX data outside the RX ring.
+
+Frame lengths are checked against `UIP_CONF_BUFFER_SIZE` before copying.
+DMA works in whole eight-byte units. `UIP_CONF_BUFFER_ALLOC_SIZE` rounds
+the backing storage up to the next complete word: 1,560 bytes for the
+1,556-byte logical frame limit. This padding allows a maximum-size frame
+to be transferred directly without a separate tail copy. The logical
+frame limit and advertised MSS are unchanged.
+
 The received frame will have an RTL proprietary Ethernet frame type of
 0x8899 (RRPC) where normally the frame type 0x0800 for IPv4 would be located.
 Further 6 bytes follow describing the frame, before the normal IPv4 data
@@ -64,3 +79,33 @@ Writing 0x1 to register 0x7850 will transmit the frame. The Ethernet frame
 checksum and the TCP checksum are automatically calculated (offloaded) by the
 ASIC before transmitting on the wire.
 
+
+## The RTL tag words
+
+The frame header uses the Realtek Remote Control Protocol (RRCP) format or
+the like.
+
+The `flags` word:
+
+```
+bit15 EFID_EN | 14:12 EFID | 11 PRI_EN | 10:8 PRI |
+bit7  KEEP    | 6 VSEL     | 5 LEARN_DIS         | 4:0 VIDX
+```
+
+All fields are in network byte order.
+
+* `EFID_EN`, `EFID`: look the destination up under this filtering ID
+  instead of the port's own
+* `PRI_EN`, `PRI`: force the given priority on the frame
+* `KEEP`: keep the 802.1Q tagging of the frame exactly as injected,
+  bypassing the egress tagging rules of the port
+* `VSEL`, `VIDX`: classify the frame into the VLAN at this index of the
+  VLAN table
+* `LEARN_DIS`: do not learn the source address from this frame
+
+The `pmask` word: bit 15 is `ALLOW`, bits 14 to 0 are a port mask.
+
+* `ALLOW` clear: the mask is the egress set, the frame goes to exactly
+  the ports given
+* `ALLOW` set: the ASIC looks the destination up as usual and the mask
+  only limits which ports the result may use

@@ -7,12 +7,23 @@
 
 #define SYS_TICK_HZ 200
 
+/* Timers of the main loop count system ticks, not loop passes: a pass is as
+ * long as the packets it handles, and since #483 the loop no longer sleeps
+ * while packets wait, so passes can outrun the tick as well as lag it. `last`
+ * is the low byte of ticks when the timer last ran; the byte arithmetic wraps
+ * every 256 ticks, so a pass longer than 1.28 s loses time rather than
+ * running the timer 64 times to catch up. */
+#define TICKS_DUE(last, period)	((uint8_t)((uint8_t)ticks - (last)) >= (period))
+
 #define CPU_PORT        9
+#define MAC_ADDR_LEN    6
+#define PORT_BIT(p)     ((uint16_t)1 << (p))
+#define NUL			'\0'
 
 // Define Port-masks for 9-port devices and 6-port devices
 #define PMASK_9		0x1ff
 #define PMASK_6		0x1f8
-#define PMASK_CPU	0x200
+#define PMASK_CPU	((uint16_t)(1 << CPU_PORT))
 
 // Defines a port mask for dropping all packets on Lookup-miss
 #define LOOKUP_MISS_DROP_6  0x00015540
@@ -36,6 +47,10 @@ extern __xdata uint8_t sbuf[SBUF_SIZE];
 // Size of the TCP Output buffer
 #define TCP_OUTBUF_SIZE 2500
 
+// Appended when a captured command wrote more than the output buffer holds,
+// so a clipped listing is visibly clipped instead of silently short.
+#define CMD_TRUNCATED "\n[output truncated]\n"
+
 // Size of the port name, including the terminating null byte
 #define PORT_NAME_SIZE 32
 
@@ -49,6 +64,7 @@ extern __xdata uint8_t sbuf[SBUF_SIZE];
 #define ERR_OK			0
 #define ERR_TOO_MANY_ARGUMENTS	1
 #define ERR_CMD_TOO_LONG	2
+#define ERR_INVALID_ARGUMENT	3
 
 // For RX data, a propriatary RTL FRAME is inserted. Instead of 0x0800 for IPv4,
 // the RTL_FRAME_TAG_ID is used as part of an 8-byte tag. When VLAN is activated,
@@ -71,6 +87,9 @@ struct vlan_tag {
 #define VLAN_TAG_SIZE		(sizeof (struct vlan_tag))
 #define RTL_FRAME_TAG_ID	0x8899
 #define RTL_FRAME_TAG_VERSION	0x04
+/* Bits of the tag's `flags` word, see doc/CpuPort.md. */
+#define RTL_TAG_LEARN_DIS	0x0020	/* do not learn the source address from this frame */
+#define RTL_TAG_KEEP		0x0080	/* keep the frame's 802.1Q tag format as injected */
 
 // For TX, an 8 byte (plus 4 byte padding when when VLAN is enabled)
 // header describing the frame to be moved to the Asic is used
@@ -89,7 +108,7 @@ struct vlan_tag {
 #define FIRMWARE_UPLOAD_START 0x80000
 
 // Constants for the circular command buffer, the size must be 2^n
-#define CMD_HISTORY_SIZE 0x400
+#define CMD_HISTORY_SIZE 0x800
 #define CMD_HISTORY_MASK (CMD_HISTORY_SIZE - 1)
 
 enum sfp_speeds {
@@ -114,21 +133,32 @@ struct flash_region_t {
 };
 
 extern __xdata char port_names[9][PORT_NAME_SIZE];
+extern __xdata uint16_t lldp_logical_port_status;
 
-extern __xdata uint8_t uip_buf[UIP_CONF_BUFFER_SIZE+2];
+extern __xdata bool stp_enabled;
+
+/* System hostname (device identity). Set via `hostname <text>` and the System
+ * Settings page, reported in /information.json. Other modules (e.g. LLDP, which
+ * advertises it as the System Name TLV) read it from here. */
+extern __xdata char hostname[24];
+
+extern __xdata uint8_t uip_buf[UIP_CONF_BUFFER_ALLOC_SIZE];
 extern __xdata struct uip_eth_addr uip_ethaddr;
 
 // Headers for calls in the common code area (HOME/BANK0)
-void print_string_no_syslog(__code char *p);
-void print_string(__code char *p);
+void print_string_no_syslog(__code const char *p);
+void print_string_newline_no_syslog(__code const char *p);
+void print_string(__code const char *p);
 void print_string_x(__xdata char *p);
 void print_long(uint32_t a);
 void print_short(uint16_t a);
 void print_byte(uint8_t a);
 void itoa(uint8_t v);
+void itoa_short(uint16_t v);
 void print_sfr_data(void);
 void print_phy_data(void);
 void print_cmd_prompt(void);
+void print_phys_port(uint8_t port);
 void phy_write_mask(uint16_t phy_mask, uint8_t dev_id, uint16_t reg, uint16_t v);
 void phy_write(uint8_t phy_id, uint8_t dev_id, uint16_t reg, uint16_t v);
 void phy_read(uint8_t phy_id, uint8_t dev_id, uint16_t reg);
@@ -140,34 +170,42 @@ void reg_write_m(uint16_t reg_addr);
 void sds_read(uint8_t sds_id, uint8_t page, uint8_t reg);
 void sds_write_v(uint8_t sds_id, uint8_t page, uint8_t reg, uint16_t v);
 void delay(uint16_t t);
-void sleep(uint16_t t);
 void write_char_no_syslog(char c);
 void write_char(char c);
 void print_reg(uint16_t reg);
-uint8_t sfp_read_reg(uint8_t slot, uint8_t reg);
+bool sfp_read_block(uint8_t slot, uint8_t reg, uint8_t len) __banked __reentrant;
+extern __xdata uint8_t sfp_buf[16];
 void reg_bit_set(uint16_t reg_addr, char bit);
 void reg_bit_clear(uint16_t reg_addr, char bit);
 uint8_t reg_bit_test(uint16_t reg_addr, char bit);
 void sfr_mask_data(uint8_t n, uint8_t mask, uint8_t set);
 void sfr_set_zero(void);
 void reset_chip(void);
+/* Firmware implementations that shadow libc names. Host unit-test builds
+ * (RTLP_HOST_TEST) hide these prototypes so they don't clash with glibc;
+ * argument order matches libc, so on-host callers transparently use the
+ * C library. See test/. */
+#ifndef RTLP_HOST_TEST
+void sleep(uint16_t t);
 void memcpy(__xdata void * __xdata dst, __xdata const void * __xdata src, uint16_t len);
-void memcpyc(register __xdata uint8_t *dst, register __code uint8_t *src, register uint16_t len);
-void memset(register __xdata uint8_t *dst, register __xdata uint8_t v, register uint8_t len);
-uint16_t strlen(register __code const char *s);
-uint16_t strlen_x(register __xdata const char *s);
-uint16_t strtox(register __xdata uint8_t *dst, register __code const char *s);
-uint16_t strcpy(register __xdata uint8_t *dst, register const char *s);
+void memset(__xdata uint8_t *dst, __xdata uint8_t v, uint8_t len);
+int memcmp(__xdata const void *a, __xdata const void *b, uint16_t len);
+uint16_t strlen(__code const char *s);
+uint16_t strcpy(__xdata uint8_t *dst, const char *s);
+char strcmp(__xdata const uint8_t *a, __code const uint8_t *b);
+#endif
+void memcpyc(__xdata uint8_t *dst, __code const uint8_t *src, uint16_t len);
+uint16_t strlen_x(__xdata const char *s);
+uint16_t strtox(__xdata uint8_t *dst, __code const char *s);
+bool strstart(__xdata const uint8_t *a, __code const uint8_t *b);
+bool strstart_x(__xdata const uint8_t *a, __xdata const uint8_t *b);
 void tcpip_output(void);
-uint8_t read_flash(uint8_t bank, __code uint8_t *addr);
+uint8_t read_flash(uint8_t bank, __code const uint8_t *addr);
 void get_random_32(void);
 void read_reg_timer(__xdata uint32_t * tmr);
-void sfp_print_info(uint8_t sfp);
 bool gpio_pin_test(uint8_t pin);
 void set_sys_led_state(uint8_t state);
 void sds_read(uint8_t sds_id, uint8_t page, uint8_t reg);
 void sds_write_v(uint8_t sds_id, uint8_t page, uint8_t reg, uint16_t v);
-void sds_config_mac(uint8_t sds, uint8_t mode);
-void sds_config(uint8_t sds, uint8_t mode);
-void handle_sfp(void);
+void flash_default_config(void);
 #endif

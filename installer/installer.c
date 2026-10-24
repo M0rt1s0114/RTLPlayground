@@ -30,7 +30,7 @@
 __xdata uint8_t buffer[0x1000];
 __xdata uint8_t dio_enabled;
 
-__code uint8_t * __code hex = "0123456789abcdef";
+__code const uint8_t * __code const hex = "0123456789abcdef";
 
 void isr_timer0(void) __interrupt(1)
 {
@@ -67,7 +67,7 @@ void write_char(char c)
 }
 
 
-void print_string(__code char *p)
+void print_string(__code const char *p)
 {
 	while (*p)
 		write_char(*p++);
@@ -213,7 +213,7 @@ uint8_t flash_read_status(void)
  * Reads bulk data of length len from the flash memory starging at address src
  * and writes the data into a buffer pointed to by dst in XMEM
  */
-void flash_read_bulk(register __xdata uint8_t *dst, __xdata uint32_t src, register uint16_t len)
+void flash_read_bulk(__xdata uint8_t *dst, __xdata uint32_t src, uint16_t len)
 {
 	short status;
 	do {

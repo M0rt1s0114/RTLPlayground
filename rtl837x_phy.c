@@ -20,9 +20,11 @@
 #pragma codeseg BANK2
 #pragma constseg BANK2
 
-extern __code uint16_t bit_mask[16];
+extern __code const uint16_t bit_mask[16];
 extern __code const struct machine machine;
 extern __xdata struct machine_runtime machine_detected;
+extern volatile __xdata uint32_t ticks;
+extern __xdata uint32_t rtl8224_release_tick;
 
 __xdata struct phy_settings phy_settings;
 
@@ -33,7 +35,7 @@ __xdata struct phy_settings phy_settings;
 // Note: Adding `Swapping the RX for N-devices`-setting on the end of the array, didn't work.
 // Setting will apply but still no packets flow.
 // Settings are `0x2000, 0xc10c`,
-__code uint16_t rtl8224_sds0_setttings[42] = {
+__code const uint16_t rtl8224_sds0_setttings[42] = {
 	// SDS_DATA, SDS_CMD
 	0x4480, 0xc842,
 	0x0400, 0xc9c2,
@@ -214,9 +216,20 @@ void phy_config(uint8_t phy) __banked
 }
 
 
+void rtl8224_wait_ready(void) __banked
+{
+	do {
+		rtl8224_read_reg_u16(RTL837X_REG_CHIP_ID + 1);
+		if (SFR_DATA_U16 == 0x8224)
+			return;
+	} while ((ticks - rtl8224_release_tick) < (SYS_TICK_HZ * 5 / 2));
+	print_string("\r\nRTL8224 not responding\r\n");
+}
+
 void phy_config_8224(void) __banked
 {
 	uint16_t pval;
+	uint16_t tries;
 	print_string("\r\nphy_config_8224 called\r\nRTL8224 ID: ");
 
 	// Print RTL8224 chip id
@@ -244,9 +257,12 @@ void phy_config_8224(void) __banked
 		i++;
 		rtl8224_write_reg_u16(RTL837X_SDS_INDACS_CMD, rtl8224_sds0_setttings[i]);
 		i++;
+		tries = 0xffff;
 		do {
 			rtl8224_read_reg_u16(0x3f8);
-		} while (SFR_DATA_8 & 0x80);
+		} while ((SFR_DATA_8 & 0x80) && --tries);
+		if (SFR_DATA_8 & 0x80)
+			print_string("\r\nRTL8224 SerDes access timed out\r\n");
 	}
 
 	print_string("\r\nphy_config_8224 done\r\n");
@@ -262,7 +278,7 @@ void phy_set_speed(void) __banked
 {
 	uint16_t v;
 
-	print_string("Setting port "); write_char(machine.log_to_phys_port[phy_settings.port] + '0');
+	print_string("Setting port "); print_phys_port(phy_settings.port);
 	if (machine.n_10g && phy_settings.port == 3)
 		phy_settings.is10g_port = 1;
 	if (machine.n_10g == 2 && phy_settings.port == 8)
@@ -332,26 +348,31 @@ void phy_set_speed(void) __banked
 		phy_write(phy_settings.port, PHY_MMD_AN, PHY_ANEG_CTRL, 0x2000);	// Clear bit 12: No Autoneg, Set Extended Pages (bit 13)
 		if (phy_settings.speed == PHY_SPEED_10M) {
 			phy_write(phy_settings.port, PHY_MMD_AN, PHY_ANEG_MGBASE_CTRL, 0x6001);
-			if (!phy_settings.duplex)
-				phy_write(phy_settings.port, PHY_MMD_AN, PHY_ANEG_ADV, 0x1421);
-			else if (phy_settings.duplex == 1)
-				phy_write(phy_settings.port, PHY_MMD_AN, PHY_ANEG_ADV, 0x1441);
+			uint16_t adv10;
+			if (phy_settings.duplex == PHY_DUPLEX_HALF)
+				adv10 = 0x1421;
+			else if (phy_settings.duplex == PHY_DUPLEX_FULL)
+				adv10 = 0x1441;
 			else
-				phy_write(phy_settings.port, PHY_MMD_AN, PHY_ANEG_ADV, 0x1461);
+				adv10 = 0x1461;
+			phy_write(phy_settings.port, PHY_MMD_AN, PHY_ANEG_ADV, adv10);
 			phy_modify(phy_settings.port, PHY_MMD31, PHY_MMD31_GBCR, 0x0200, 0x0000);
 		} else if (phy_settings.speed == PHY_SPEED_100M) {
 			phy_write(phy_settings.port, PHY_MMD_AN, PHY_ANEG_MGBASE_CTRL, 0x6001);
-			if (!phy_settings.duplex)
-				phy_write(phy_settings.port, PHY_MMD_AN, PHY_ANEG_ADV, 0x1481);
-			if (phy_settings.duplex == 1)
-				phy_write(phy_settings.port, PHY_MMD_AN, PHY_ANEG_ADV, 0x1501);
+			uint16_t adv100;
+			if (phy_settings.duplex == PHY_DUPLEX_HALF)
+				adv100 = 0x1481;
+			else if (phy_settings.duplex == PHY_DUPLEX_FULL)
+				adv100 = 0x1501;
 			else
-				phy_write(phy_settings.port, PHY_MMD_AN, PHY_ANEG_ADV, 0x1581);
+				adv100 = 0x1581;
+			phy_write(phy_settings.port, PHY_MMD_AN, PHY_ANEG_ADV, adv100);
 			phy_modify(phy_settings.port, PHY_MMD31, PHY_MMD31_GBCR, 0x0200, 0x0000);
 		} else {
 			// AN Advertisement Register (MMD 7.0x0010)
-			// bits 0-4: 0x1 (802.3 supported), Extended Next Page format used
-			phy_write(phy_settings.port, PHY_MMD_AN, PHY_ANEG_ADV, 0x1001);
+			// bits 0-4: 0x1 (802.3 supported), bit 10: PAUSE,
+			// Extended Next Page format used
+			phy_write(phy_settings.port, PHY_MMD_AN, PHY_ANEG_ADV, 0x1401);
 			if (phy_settings.speed == PHY_SPEED_1G) {
 				// Multi-GBASE-TBASE-T AN Control 1 Register (MMD 7.0x0020)
 				// bit 14: SLAVE, bit 13: Multi-Port device, 1: LD Loop timin enableed
@@ -381,7 +402,7 @@ void phy_set_duplex(void) __banked
 {
 	uint16_t v;
 
-	print_string("Setting port "); write_char(machine.log_to_phys_port[phy_settings.port] + '0');
+	print_string("Setting port "); print_phys_port(phy_settings.port);
 	if (phy_settings.duplex)
 		print_string(" to full duplex");
 	else
@@ -468,9 +489,13 @@ void phy_show(uint8_t port) __banked
 		phy_read(port, PHY_MMD_PMAPMD, 0);
 		v = SFR_DATA_U16;
 		print_string("\nForced speed: "); print_short(v); write_char('\n');
-		uint8_t s1 = ((v & 0x40) ? 0x2 : 0x0) | ((v & 0x2000) ? 0x1 : 0x0);
-		uint8_t s2 = (v >> 2) & 0xf;
-		switch(s1) {
+		uint8_t s1 = 0x00;
+		if ((uint8_t)v & 0x40)
+			s1 = 0x2;
+		if (v & 0x2000)
+			s1 |= 0x1;
+		uint8_t s2 = ((uint8_t)v >> 2) & 0xf;
+		switch(s1 & 0x3) {
 		case 0:
 			print_string("10M\n");
 			break;
@@ -495,8 +520,6 @@ void phy_show(uint8_t port) __banked
 				print_string("Unknown\n");
 			}
 			break;
-		default:
-			print_string("Unknown\n");
 		}
 		phy_read(port, PHY_MMD31, PHY_MMD31_FEDCR);
 		v = SFR_DATA_U16;
@@ -582,7 +605,7 @@ void phy_reset(uint8_t port) __banked
 // Reading only reads the lower 16-bit part of the 32-bit register.
 // When also needing read the upper 16-bits, use register address + 1.
 // Readed values it return via sfr-data.
-void inline rtl8224_read_reg_u16(uint16_t reg) __banked
+void rtl8224_read_reg_u16(uint16_t reg) __banked
 {
 	//	void phy_read(uint8_t phy_id, uint8_t dev_id, uint16_t reg)
 	// phy_read(RTL8224_PHY_ID, PHY_MMD30, reg);
@@ -590,7 +613,7 @@ void inline rtl8224_read_reg_u16(uint16_t reg) __banked
 	SFR_SMI_REG_U16 = reg;		// c2, c2
 
 	SFR_SMI_PHY = RTL8224_PHY_ID;		// a5
-	SFR_SMI_DEV = PHY_MMD30 << 3 | 2;	// c4
+	SFR_SMI_DEV = (uint8_t)PHY_MMD30 << 3 | 2;	// c4
 
 	SFR_EXEC_GO = SFR_EXEC_READ_SMI;
 	do {
@@ -601,7 +624,7 @@ void inline rtl8224_read_reg_u16(uint16_t reg) __banked
 // Registers names are the same as on the RTL837x.
 // Writing only the lower 16-bit part of the 32-bit register.
 // When also needing to write the upper 16-bits, use register address + 1.
-void inline rtl8224_write_reg_u16(uint16_t reg, uint16_t val) __banked
+void rtl8224_write_reg_u16(uint16_t reg, uint16_t val) __banked
 {
 	SFR_DATA_U16 = val;			    // SFR_A6, SFR_A7
 	SFR_SMI_REG_U16 = reg;			// SFR_C2, SFR_C3
@@ -633,7 +656,7 @@ void inline rtl8224_write_reg_u16(uint16_t reg, uint16_t val) __banked
 
 
 // Write to the RTL8224 SDS registers.
-void rtl8224_sds_write(uint16_t sds_cmd, uint16_t value) __banked
+void rtl8224_sds_write(uint16_t sds_cmd, __xdata uint16_t value) __banked
 {
 	// Wait for command bit is cleared
 	do {

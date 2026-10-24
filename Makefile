@@ -4,134 +4,236 @@ DEFAULT_CONFIG_LOCATION = 454656
 CONFIG_LOCATION = 458752
 HTML_LOCATION = 262144
 
+ifeq ($(origin CC),default)
 CC = sdcc
-CC_FLAGS = -mmcs51 -I. -Ihttpd -Iuip
-ASM = sdas8051
+endif
+CC_FLAGS = -mmcs51 -I. -Imachine -Ihttpd -Iuip
+ASM ?= sdas8051
 AFLAGS= -plosgff
 
 SUBDIRS := tools
 SUBDIRSCLEAN=$(addsuffix clean,$(SUBDIRS))
 
-GEN_MACHINE := tools/gen_machine_c.py
-
-# Guard: MACHINE is required for 'all', but machine_check uses its own loop.
-# We accept the special value "machine_check_placeholder" to satisfy variable
-# expansion (BUILDDIR etc.) without triggering the check_board error.
-ifeq ($(MACHINE),)
-  BOARD_YAML :=
-  BUILDDIR   := output/_placeholder
-else ifeq ($(MACHINE),machine_check_placeholder)
-  BOARD_YAML :=
-  BUILDDIR   := output/_placeholder
-else
-  BOARD_YAML := boards/$(MACHINE).yaml
+# $MACHINE selects machine/$(MACHINE).c as the board definition and is passed
+# on as -DMACHINE_NAME, which machine.h uses to include machine/$(MACHINE).h.
+# Board selection itself needs no MACHINE_* symbol for #if chains, so the
+# definition is all the compiler has to know.
+ifneq ($(MACHINE),)
+	CC_FLAGS += -DMACHINE_NAME=$(MACHINE)
+endif
+# Health instrumentation and the "health" console command: HEALTH=1 gmake ...
+ifneq ($(HEALTH),)
+	CC_FLAGS += -DHEALTH
 endif
 
-BUILDDIR = output/$(MACHINE)
+ifeq ($(CI),1)
+	CC_FLAGS += --Werror
+endif
+
+# The board definition being built: one file per MACHINE_* symbol in machine.h.
+MACHINE_SRC = machine/$(MACHINE).c
+
+MACHINE_INIT_DEFAULT := machine/default_machine_init.c
+MACHINE_INIT_SRC := $(wildcard machine/$(MACHINE)_init.c)
+ifeq ($(MACHINE_INIT_SRC),)
+	MACHINE_INIT_SRC := $(MACHINE_INIT_DEFAULT)
+endif
+
+ifndef BUILDDIR
+	BUILDDIR = output/$(MACHINE)
+endif
+
 VERSION_HEADER := version.h
 
-GIT_VERSION := $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
-ifneq ($(GIT_VERSION),unknown)
-  ifneq ($(shell git status --porcelain --untracked-files=no 2>/dev/null),)
-    GIT_VERSION := $(GIT_VERSION)-dirty
-  endif
+GIT_VERSION := $(shell git rev-parse --short HEAD)
+ifeq ($(shell git status --porcelain --untracked-files=no),)
+else
+	GIT_VERSION := $(GIT_VERSION)-dirty
 endif
 
 VERSION_EXTENSION = v$(VERSION)-$(GIT_VERSION)
 FILENAME_EXTENSION = $(VERSION_EXTENSION)-$(MACHINE)
 
-all: check_board generate_machine create_build_dir $(VERSION_HEADER) $(SUBDIRS) $(BUILDDIR)/rtlplayground-$(FILENAME_EXTENSION).bin
+# Deterministic build date: honor SOURCE_DATE_EPOCH, else the HEAD commit date,
+# else wall-clock (no-git fallback). Keeps same-commit builds byte-identical
+# (BUILD_DATE is baked into the image and covered by the trailing CRC).
+SOURCE_DATE_EPOCH ?= $(shell git show -s --format=%ct HEAD 2>/dev/null)
+ifeq ($(SOURCE_DATE_EPOCH),)
+BUILD_DATE := $(shell date +"%Y-%m-%d %H:%M:%S")
+else
+BUILD_DATE := $(shell date -u -d @$(SOURCE_DATE_EPOCH) +"%Y-%m-%d %H:%M:%S" 2>/dev/null \
+	|| date -u -r $(SOURCE_DATE_EPOCH) +"%Y-%m-%d %H:%M:%S")
+endif
 
+# $(MACHINE_SRC) is listed here so an unknown $MACHINE fails before anything else
+# is built, including the tools/ subdirectory.
+all: create_build_dir $(VERSION_HEADER) $(MACHINE_SRC) $(SUBDIRS) $(BUILDDIR)/rtlplayground-$(FILENAME_EXTENSION).bin
 
-check_board:
-	@if [ -z "$(MACHINE)" ] || [ "$(MACHINE)" = "machine_check_placeholder" ]; then \
-		echo "Error: MACHINE not set. Usage: make MACHINE=<board_id>"; \
-		echo "Available boards:"; \
-		ls boards/*.yaml | sed 's|boards/||;s|\.yaml||'; \
-		exit 1; \
-	fi
-	@if [ ! -f "$(BOARD_YAML)" ]; then \
-		echo "Error: board file not found: $(BOARD_YAML)"; \
-		echo "Available boards:"; \
-		ls boards/*.yaml | sed 's|boards/||;s|\.yaml||'; \
-		exit 1; \
-	fi
-
-generate_machine: $(BOARD_YAML)
-	python3 $(GEN_MACHINE) $(BOARD_YAML) machine.c
-	@echo "  GEN machine.c  <--  $(BOARD_YAML)"
+bank_size:
+	tools/bank_occupancy.sh "$(MACHINE)"
 
 create_build_dir:
-	mkdir -p $(BUILDDIR)
-	mkdir -p $(BUILDDIR)/uip
-	mkdir -p $(BUILDDIR)/httpd
+	mkdir -p "$(BUILDDIR)"
+	mkdir -p "$(BUILDDIR)/uip"
+	mkdir -p "$(BUILDDIR)/httpd"
+	mkdir -p "$(BUILDDIR)/machine"
 
-SRCS = rtlplayground.c rtl837x_flash.c rtl837x_leds.c rtl837x_phy.c rtl837x_port.c cmd_parser.c html_data.c rtl837x_igmp.c
-SRCS += rtl837x_stp.c rtl837x_pins.c dhcp.c machine.c cmd_editor.c rtl837x_bandwidth.c rtl837x_init.c syslog.c
-SRCS += uip/timer.c uip/uip.c uip/uip_arp.c uip/uiplib.c uip/uip-fw.c uip/uip-neighbor.c uip/uip-split.c udp_apps.c
-SRCS += httpd/httpd.c httpd/page_impl.c
+# Every machine is a pair machine/<MACHINE>.c + machine/<MACHINE>.h. Selecting
+# them by name means no #if/#elif chain, so an unknown or empty $MACHINE is
+# caught here instead of by a #error further down the build.
+$(MACHINE_SRC):
+	@echo "ERROR: MACHINE='$(MACHINE)' has no definition (expected $(MACHINE_SRC))." >&2
+	@echo "       Every machine is one file pair under machine/, named after the" >&2
+	@echo "       MACHINE_* symbol it defines; see machine/*.c for the full list." >&2
+	@echo "       Example: make MACHINE=KP_9000_6XHML_X2" >&2
+	@false
+
+# Keep the per-machine definition in first position to fail immediately on an
+# invalid $MACHINE value
+SRCS = \
+	$(MACHINE_SRC) \
+	$(MACHINE_INIT_SRC) \
+	cmd_editor.c \
+	cmd_parser.c \
+	dhcp.c \
+	html_data.c \
+	rtlplayground.c \
+	boot.c \
+	sfp.c \
+	dns.c \
+	dns_cli.c \
+	ntp.c \
+	ntp_cli.c \
+	syslog.c \
+	udp_apps.c
+
+# RTL837x
+SRCS += \
+	rtl837x_bandwidth.c \
+	rtl837x_cabletest.c \
+	rtl837x_flash.c \
+	rtl837x_igmp.c \
+	rtl837x_init.c \
+	rtl837x_nic.c \
+	rtl837x_leds.c \
+	rtl837x_leds_dump.c \
+	rtl837x_phy.c \
+	rtl837x_pins.c\
+	rtl837x_port.c \
+	rtl837x_stp.c \
+	rtl837x_lldp.c \
+	rtl837x_storm.c \
+	rtl837x_lacp.c \
+	rtl837x_trap.c
+SRCS += \
+	httpd/httpd.c \
+	httpd/page_impl.c
+SRCS += \
+	uip/timer.c \
+	uip/uip.c \
+	uip/uiplib.c \
+	uip/uip_arp.c \
+	uip/uip-fw.c \
+	uip/uip-neighbor.c \
+	uip/uip-split.c
+
 OBJS = ${SRCS:%.c=$(BUILDDIR)/%.rel}
 DEPS := ${SRCS:%.c=$(BUILDDIR)/%.d}
-HTML := $(shell find $(html) -name '*.js' -or -name '*.html' -or -name '*.svg')
+HTML := $(shell find html -name '*.js' -or -name '*.html' -or -name '*.svg' -or -name '*.css' -or -name '*.ico')
 
-html_data.c html_data.h: $(HTML) tools/output/fileadder
-	tools/output/fileadder -a $(HTML_LOCATION) -s $(IMAGESIZE) -b BANK1 -d html -p html_data
+# Minified copy of the web UI sources, used as the fileadder input.
+# The raw html/ sources stay untouched for development; the minified
+# copy is a build artifact under output/.
+HTML_MIN := $(BUILDDIR)/html_min
+.PHONY: html_min
+html_min: $(HTML)
+	rm -rf $(HTML_MIN)
+	mkdir -p $(HTML_MIN)
+	@for f in $(HTML); do python3 tools/minify.py $$f $(HTML_MIN)/$$(basename $$f) || exit 1; done
 
-$(VERSION_HEADER):
-	@echo "#ifndef VERSION_H" > $(VERSION_HEADER)
-	@echo "#define VERSION_H" >> $(VERSION_HEADER)
-	@echo "#define VERSION_SW \"$(VERSION_EXTENSION)\"" >> $(VERSION_HEADER)
-	@echo "#define BUILD_DATE \"$(shell date +"%Y-%m-%d %H:%M:%S")\"" >> $(VERSION_HEADER)
-	@echo "#endif" >> $(VERSION_HEADER)
+html_data.c html_data.h &: $(HTML) | tools html_min
+	tools/$(BUILDDIR)/fileadder -a $(HTML_LOCATION) -s $(IMAGESIZE) -b BANK1 -z -d $(HTML_MIN) -p html_data
+
+$(VERSION_HEADER): FORCE
+	@printf '%s\n' "#ifndef VERSION_H" "#define VERSION_H" \
+		"#define VERSION_SW \"$(VERSION_EXTENSION)\"" \
+		"#define BUILD_DATE \"$(BUILD_DATE)\"" \
+		"#endif" > $(VERSION_HEADER).tmp
+	@cmp -s $(VERSION_HEADER).tmp $(VERSION_HEADER) \
+		&& rm -f $(VERSION_HEADER).tmp \
+		|| mv $(VERSION_HEADER).tmp $(VERSION_HEADER)
 
 httpd: html_data.h
 
 $(SUBDIRS):
-	$(MAKE) -C $@
+	$(MAKE) -C $@ BUILDDIR=$(BUILDDIR)
 
-clean:
+clean: $(SUBDIRSCLEAN)
 	-rm -f html_data.c html_data.h $(VERSION_HEADER)
 	-if [ -d $(BUILDDIR) ]; then find $(BUILDDIR) -type f ! -name "*.bin" -delete; fi
 
-distclean:
+distclean: $(SUBDIRSCLEAN)
 	-rm -f html_data.c html_data.h $(VERSION_HEADER)
 	-rm -rf $(BUILDDIR)
 
-$(BUILDDIR)/%.rel: %.c
+$(SUBDIRSCLEAN):
+	$(MAKE) -C $(@:clean=) clean
+
+# Objects depend on the flags they were built with, through a stamp file that
+# is rewritten only when CC_FLAGS actually changes.
+CCFLAGS_STAMP := $(BUILDDIR)/.ccflags
+
+.PHONY: FORCE
+FORCE:
+
+$(CCFLAGS_STAMP): FORCE | create_build_dir
+	@echo '$(CC_FLAGS)' | cmp -s - $@ 2>/dev/null || echo '$(CC_FLAGS)' > $@
+
+$(BUILDDIR)/%.rel: %.c $(CCFLAGS_STAMP) | create_build_dir html_data.h
 	$(CC) -MMD $(CC_FLAGS) -o $@ -c $<
 
-$(BUILDDIR)/%.rel: %.asm
+$(BUILDDIR)/%.rel: %.asm $(CCFLAGS_STAMP) | create_build_dir
 	${ASM} ${AFLAGS} -o $@ $<
 #	mv -f $(addprefix $(basename $^), .lst .rel .sym) .
 
-$(BUILDDIR)/rtlplayground.ihx: $(OBJS) $(BUILDDIR)/crtstart.rel $(BUILDDIR)/crc16.rel
-	$(CC) $(CC_FLAGS) -Wl-bHOME=0x00000 -Wl-bBANK1=0x14000 -Wl-bBANK2=0x24000 -Wl-r -o $@ $^
+$(BUILDDIR)/rtlplayground.ihx: $(OBJS) $(BUILDDIR)/crtbank.rel $(BUILDDIR)/crc16.rel
+	$(CC) $(CC_FLAGS) --xram-size 49151 -Wl-bHOME=0x00000 -Wl-bBANK1=0x14000 -Wl-bBANK2=0x24000 -Wl-bBANK3=0x34000 -Wl-r -o $@ $^
 
 $(BUILDDIR)/rtlplayground.img: $(BUILDDIR)/rtlplayground.ihx
 	objcopy --input-target=ihex -O binary $< $@
 
-$(BUILDDIR)/rtlplayground-$(FILENAME_EXTENSION).bin: $(BUILDDIR)/rtlplayground.img
+$(BUILDDIR)/rtlplayground-$(FILENAME_EXTENSION).bin: $(BUILDDIR)/rtlplayground.img | tools
 	if [ -e $@ ]; then rm $@; fi
-	tools/output/imagebuilder -i $^ $@
-	tools/output/fileadder -a $(DEFAULT_CONFIG_LOCATION) -s $(IMAGESIZE) -d config.txt $@
-	tools/output/fileadder -a $(CONFIG_LOCATION) -s $(IMAGESIZE) -d config.txt $@
-	tools/output/fileadder -a $(HTML_LOCATION) -s $(IMAGESIZE) -d html -p html_data -b BANK1 $@
-	tools/output/crc_calculator -u $@
-	ln -sf $(MACHINE)/rtlplayground-$(FILENAME_EXTENSION).bin output/rtlplayground.bin
+	tools/$(BUILDDIR)/imagebuilder -i $^ $@
+	tools/$(BUILDDIR)/fileadder -a $(DEFAULT_CONFIG_LOCATION) -s $(IMAGESIZE) -d config.txt $@
+	tools/$(BUILDDIR)/fileadder -a $(CONFIG_LOCATION) -s $(IMAGESIZE) -d config.txt $@
+	tools/$(BUILDDIR)/fileadder -a $(HTML_LOCATION) -s $(IMAGESIZE) -z -d $(HTML_MIN) -b BANK1 $@
+	tools/$(BUILDDIR)/crc_calculator -u $@
+	ln -sf $(MACHINE)/rtlplayground-$(FILENAME_EXTENSION).bin $(BUILDDIR)/../rtlplayground.bin
 
-.PHONY: clean all $(SUBDIRS) $(VERSION_HEADER) check_board generate_machine machine_check
+.PHONY: clean distclean all $(SUBDIRS) $(SUBDIRSCLEAN) create_build_dir
 
-.PHONY:
+# Every machine/ definition is compiled, so a machine added to machine/ is
+# covered without registering it anywhere. The _init.c files are excluded here:
+# they are the boot hooks, compiled separately below (the board's own if it
+# exists, otherwise default_machine_init.c). The machine-specific defines are
+# filtered out of $(CC_FLAGS) and supplied per iteration instead, so this also
+# works as "make machine_check MACHINE=...".
+MACHINE_DEFS := $(sort $(patsubst machine/%.c,%,$(filter-out machine/%_init.c,$(wildcard machine/*.c))))
+MACHINE_LESS_CC_FLAGS = $(filter-out -DMACHINE_%,$(CC_FLAGS))
+
+.PHONY: machine_check
 machine_check:
-	@mkdir -p output/machine_check_tmp
+	@mkdir -p $(BUILDDIR)/tmp
 	@set -eo pipefail; \
-	for YAML in boards/*.yaml; do \
-		MACHINE=$$(basename $$YAML .yaml); \
-		echo "Checking $${MACHINE}"; \
-		python3 $(GEN_MACHINE) $$YAML output/machine_check_tmp/machine_$${MACHINE}.c; \
-		$(CC) -mmcs51 -I. -Ihttpd -Iuip -o output/machine_check_tmp/$${MACHINE}.rel -c output/machine_check_tmp/machine_$${MACHINE}.c; \
+	for MACHINE in $(MACHINE_DEFS); \
+	do \
+	echo "Checking $${MACHINE}"; \
+	$(CC) $(MACHINE_LESS_CC_FLAGS) -DMACHINE_NAME=$${MACHINE} -MMD -o $(BUILDDIR)/tmp/machine_check -c machine/$${MACHINE}.c; \
+	INIT=machine/$${MACHINE}_init.c; \
+	if [ ! -e $$INIT ] && [ ! -L $$INIT ]; then INIT=$(MACHINE_INIT_DEFAULT); fi; \
+	$(CC) $(MACHINE_LESS_CC_FLAGS) -DMACHINE_NAME=$${MACHINE} -MMD -o $(BUILDDIR)/tmp/machine_check -c $$INIT; \
 	done
-	@rm -rf output/machine_check_tmp
-	@echo "All boards OK." 
+	@rm -rf $(BUILDDIR)/tmp
 
 -include $(DEPS)

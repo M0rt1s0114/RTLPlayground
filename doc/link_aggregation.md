@@ -48,9 +48,11 @@ void port_lag_hash_set(__xdata uint8_t lag, __xdata uint8_t hash_bits) __banked;
 ## LAG configuration on the Serial Console
 For testing the following commands are provided on the serial console:
 ```
-> lag <LAG-ID> [p1] [p2]...
-  Create or set a LAG. Trunk-ID is 1 or 2. Ports are physical ports
-  If only the LAG-ID is given but no members, the LAG is deleted
+> lag <LAG-ID> <p1> [p2]...
+  Create or set a LAG. LAG-ID is 1 to 4. Ports are physical ports.
+
+> lag <LAG-ID> d
+  Delete the LAG.
 
 > lag show
   Shows information on all 4 lags
@@ -92,7 +94,7 @@ The following shows the network configuration
 On _both_ switches create a LAG with ports 1 and 2 inside and the default hash algorithm which takes
 source and destination ports into account, e.g. just use the default:
 ```
-> lag 0 1 2
+> lag 1 1 2
 ```
 
 
@@ -225,3 +227,7 @@ iperf Done.
 ```
 As you can see, the total throughput was 4.71 GBit/sec which is close to the
 maximum possible with a single 5GBit link.
+
+## LACP
+
+Dynamic aggregation with LACP is described in [lacp.md](lacp.md).

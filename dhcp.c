@@ -41,6 +41,7 @@ __xdata uip_ipaddr_t server;
 #define DHCP_REBIND_LEN		4
 #define DHCP_CLIENT_ID		61
 #define DHCP_CLIENT_ID_LEN	7
+#define DHCP_HOSTNAME		12
 #define DHCP_REQUEST_IP		50
 #define DHCP_REQUEST_IP_LEN	4
 #define DHCP_PARAMS		55
@@ -49,8 +50,8 @@ __xdata uip_ipaddr_t server;
 #define DHCP_PARAM_DNS		6
 #define DHCP_END		255
 
-#pragma codeseg BANK2
-#pragma constseg BANK2
+#pragma codeseg BANK3
+#pragma constseg BANK3
 
 struct dhcp_pkt {
 	uint8_t type;
@@ -93,7 +94,7 @@ void dhcp_prepare_request(void)
 	DHCP_P->hw_len = 6;
 	DHCP_P->hops = 0;
 
-	DHCP_P->tid = HTONS(dhcp_state.transaction_id);
+	DHCP_P->tid = dhcp_state.transaction_id;
 	DHCP_P->delay = HTONS(0);
 	DHCP_P->flags = 0;
 	// Clear fields client_ip to bootp_file
@@ -116,6 +117,20 @@ void dhcp_addopt_client_id(void)
 }
 
 
+void dhcp_addopt_hostname(void)
+{
+	uint8_t len = 0;
+	while (hostname[len])
+		len++;
+	if (!len)
+		return;
+	DHCP_OPT[dhcp_state.opt_ptr++] = DHCP_HOSTNAME;
+	DHCP_OPT[dhcp_state.opt_ptr++] = len;
+	memcpy(&DHCP_OPT[dhcp_state.opt_ptr], hostname, len);
+	dhcp_state.opt_ptr += len;
+}
+
+
 void dhcp_addopt_request_ip(void)
 {
 	DHCP_OPT[dhcp_state.opt_ptr++] = DHCP_REQUEST_IP;
@@ -124,7 +139,6 @@ void dhcp_addopt_request_ip(void)
 	DHCP_OPT[dhcp_state.opt_ptr++] = dhcp_state.current_ip[1];
 	DHCP_OPT[dhcp_state.opt_ptr++] = dhcp_state.current_ip[2];
 	DHCP_OPT[dhcp_state.opt_ptr++] = dhcp_state.current_ip[3];
-	memcpy(&DHCP_OPT[dhcp_state.opt_ptr], uip_ethaddr.addr, 4);
 }
 
 
@@ -136,13 +150,11 @@ void dhcp_addopt_server_id(void)
 	DHCP_OPT[dhcp_state.opt_ptr++] = dhcp_state.server[1];
 	DHCP_OPT[dhcp_state.opt_ptr++] = dhcp_state.server[2];
 	DHCP_OPT[dhcp_state.opt_ptr++] = dhcp_state.server[3];
-	memcpy(&DHCP_OPT[dhcp_state.opt_ptr], uip_ethaddr.addr, 4);
 }
 
 
 void dhcp_send_discover(void)
 {
-	print_string("dhcp_send_discover called\n");
 	dhcp_prepare_request();
 
 	dhcp_state.opt_ptr = 0;
@@ -152,6 +164,7 @@ void dhcp_send_discover(void)
 
 	dhcp_addopt_client_id();
 	dhcp_addopt_request_ip();
+	dhcp_addopt_hostname();
 
 	DHCP_OPT[dhcp_state.opt_ptr++] = DHCP_PARAMS;
 	DHCP_OPT[dhcp_state.opt_ptr++] = 3;
@@ -177,7 +190,6 @@ void dhcp_send_discover(void)
 
 void dhcp_send_request(void)
 {
-	print_string("dhcp_send_request called\n");
 	dhcp_prepare_request();
 
 	dhcp_state.opt_ptr = 0;
@@ -188,6 +200,7 @@ void dhcp_send_request(void)
 	dhcp_addopt_client_id();
 	dhcp_addopt_request_ip();
 	dhcp_addopt_server_id();
+	dhcp_addopt_hostname();
 
 	DHCP_OPT[dhcp_state.opt_ptr++] = DHCP_PARAMS;
 	DHCP_OPT[dhcp_state.opt_ptr++] = 3;
@@ -215,19 +228,21 @@ void ip_opt(__xdata uint8_t * ip)
 {
 	dhcp_state.opt_ptr++;
 	uint8_t len = DHCP_OPT[dhcp_state.opt_ptr++];
-	*ip++ = DHCP_OPT[dhcp_state.opt_ptr++];
-	*ip++ = DHCP_OPT[dhcp_state.opt_ptr++];
-	*ip++ = DHCP_OPT[dhcp_state.opt_ptr++];
-	*ip++ = DHCP_OPT[dhcp_state.opt_ptr++];
+	if (len >= 4)
+		memcpy(ip, &DHCP_OPT[dhcp_state.opt_ptr], 4);
 	 // There may be more than one IP option, such as 2 DNS servers advertised
-	dhcp_state.opt_ptr += len - 4;
+	dhcp_state.opt_ptr += len;
 }
 
 
-void long_opt(void)
+uint8_t long_opt(void)
 {
 	dhcp_state.opt_ptr++;
-	dhcp_state.opt_ptr++;
+	uint8_t len = DHCP_OPT[dhcp_state.opt_ptr++];
+	if (len < 4) {
+		dhcp_state.opt_ptr += len;
+		return 0;
+	}
 	long_value =  DHCP_OPT[dhcp_state.opt_ptr++];
 	long_value <<= 8;
 	long_value |= DHCP_OPT[dhcp_state.opt_ptr++];
@@ -235,6 +250,8 @@ void long_opt(void)
 	long_value |= DHCP_OPT[dhcp_state.opt_ptr++];
 	long_value <<= 8;
 	long_value |= DHCP_OPT[dhcp_state.opt_ptr++];
+	dhcp_state.opt_ptr += len - 4;
+	return 1;
 }
 
 
@@ -258,16 +275,16 @@ void parse_opts(void)
 			ip_opt(&dhcp_state.broadcast[0]);
 			break;
 		case DHCP_LEASE:
-			long_opt();
-			dhcp_state.lease = long_value;
+			if (long_opt())
+				dhcp_state.lease = long_value;
 			break;
 		case DHCP_REBIND:
-			long_opt();
-			dhcp_state.rebind = long_value;
+			if (long_opt())
+				dhcp_state.rebind = long_value;
 			break;
 		case DHCP_RENEWAL:
-			long_opt();
-			dhcp_state.renewal = long_value;
+			if (long_opt())
+				dhcp_state.renewal = long_value;
 			break;
 		case DHCP_END:
 			break;
@@ -283,7 +300,7 @@ void parse_opts(void)
 
 void parse_dhcp(void)
 {
-	if (!DHCP_P->tid == HTONS(dhcp_state.transaction_id))
+	if (DHCP_P->tid != dhcp_state.transaction_id)
 		return;
 	if (DHCP_P->cookie[0] != 0x63 || DHCP_P->cookie[1] != 0x82 || DHCP_P->cookie[2] != 0x53 || DHCP_P->cookie[3] != 0x63)
 		return;
@@ -315,6 +332,18 @@ void parse_dhcp(void)
 		uip_ipaddr(&uip_hostaddr, dhcp_state.current_ip[0], dhcp_state.current_ip[1], dhcp_state.current_ip[2], dhcp_state.current_ip[3]);
 		uip_ipaddr(&uip_draddr, dhcp_state.router[0], dhcp_state.router[1], dhcp_state.router[2], dhcp_state.router[3]);
 		uip_ipaddr(&uip_netmask, dhcp_state.subnet[0], dhcp_state.subnet[1], dhcp_state.subnet[2], dhcp_state.subnet[3]);
+		/* T1 is optional. Without it the renewal time stays zero, which
+		 * makes dhcp_timer zero, and the callback then sends a REQUEST on
+		 * every pass through LEASING: client and server trade REQUEST and
+		 * ACK as fast as the round trip allows. RFC 2131 has the client
+		 * renew at half the lease when the server does not say, and if
+		 * there is no lease either, pick something rather than zero. Only
+		 * filled in when absent, so a server that asks for a short renewal
+		 * still gets it. */
+		if (!dhcp_state.renewal)
+			dhcp_state.renewal = dhcp_state.lease / 2;
+		if (!dhcp_state.renewal)
+			dhcp_state.renewal = 60;
 		dhcp_state.state = DHCP_LEASING;
 		dhcp_state.ticks = SYS_TICK_HZ;
 		dhcp_state.dhcp_timer = dhcp_state.renewal > 0xffff ? 0xffff : dhcp_state.renewal;
@@ -324,6 +353,12 @@ void parse_dhcp(void)
 
 void dhcp_start(void) __banked
 {
+	/* Starting twice would leave the first socket bound: uip_udp_new() takes
+	 * the next free slot while the old one keeps port 68, and dhcp_callback()
+	 * matches on that port rather than on the connection, so every leftover
+	 * runs the state machine too and the timers count down once per socket. */
+	if (dhcp_state.state != DHCP_OFF)
+		dhcp_stop();
 	uip_ipaddr(server, 255,255,255,255);
 	dhcp_state.conn = uip_udp_new(&server, HTONS(DHCPC_SERVER_PORT));
 	dhcp_state.current_ip[0] = dhcp_state.current_ip[1] = dhcp_state.current_ip[2] = dhcp_state.current_ip[3] = 0;
@@ -334,15 +369,18 @@ void dhcp_start(void) __banked
 		return;
 	}
 	get_random_32();
-	dhcp_state.transaction_id = SFR_DATA_U32;
+	// Workaround SDCC bug 4070: dhcp_state.transaction_id = SFR_DATA_U32;
+	__xdata uint8_t * tid = &dhcp_state.transaction_id;
+	*tid++ = SFR_DATA_24;
+	*tid++ = SFR_DATA_16;
+	*tid++ = SFR_DATA_8;
+	*tid = SFR_DATA_0;
 	dhcp_state.state = DHCP_START;
-	print_string("dhcp_start done\n");
 }
 
 
 void dhcp_stop(void) __banked
 {
-	print_string("dhcp_stop called\n");
 	uip_udp_remove(dhcp_state.conn);
 	dhcp_state.state = DHCP_OFF;
 }

@@ -763,7 +763,7 @@ void uip_send(__xdata const void *data, __xdata uint16_t len) __banked;
  * \return The uip_udp_conn structure for the new connection or NULL
  * if no connection could be allocated.
  */
-__xdata struct uip_udp_conn *uip_udp_new(__xdata uip_ipaddr_t *ripaddr, __xdata u16_t rport) __banked;
+__xdata struct uip_udp_conn *uip_udp_new(__xdata uip_ipaddr_t * __xdata ripaddr, __xdata u16_t rport) __banked;
 
 /**
  * Removed a UDP connection.
@@ -912,8 +912,8 @@ __xdata struct uip_udp_conn *uip_udp_new(__xdata uip_ipaddr_t *ripaddr, __xdata 
 				      ((__xdata u16_t *)addr1)[1] == ((__xdata u16_t *)addr2)[1])
 #define uip_ipaddr_cmpx(addr1, addr2) (((__xdata u16_t *)addr1)[0] == ((__xdata u16_t *)addr2)[0] && \
 				      ((__xdata u16_t *)addr1)[1] == ((__xdata u16_t *)addr2)[1])
-#define uip_ipaddr_cmpc(addr1, addr2) (((__xdata u16_t *)addr1)[0] == ((__code u16_t *)addr2)[0] && \
-				      ((__xdata u16_t *)addr1)[1] == ((__code u16_t *)addr2)[1])
+#define uip_ipaddr_cmpc(addr1, addr2) (((__xdata u16_t *)addr1)[0] == ((__code const u16_t *)addr2)[0] && \
+				      ((__xdata u16_t *)addr1)[1] == ((__code const u16_t *)addr2)[1])
 #else /* !UIP_CONF_IPV6 */
 #define uip_ipaddr_cmp(addr1, addr2) (memcmp(addr1, addr2, sizeof(uip_ip6addr_t)) == 0)
 #endif /* !UIP_CONF_IPV6 */
@@ -1193,7 +1193,7 @@ struct uip_conn {
  * The uip_conn pointer can be used to access the current TCP
  * connection.
  */
-extern __xdata struct uip_conn *uip_conn;
+extern __xdata struct uip_conn * __xdata uip_conn;
 /* The array containing all uIP connections. */
 extern __xdata struct uip_conn uip_conns[UIP_CONNS];
 /**
@@ -1226,7 +1226,7 @@ struct uip_udp_conn {
 /**
  * The current UDP connection.
  */
-extern __xdata struct uip_udp_conn *uip_udp_conn;
+extern __xdata struct uip_udp_conn * __xdata uip_udp_conn;
 extern __xdata struct uip_udp_conn uip_udp_conns[UIP_UDP_CONNS];
 #endif /* UIP_UDP */
 

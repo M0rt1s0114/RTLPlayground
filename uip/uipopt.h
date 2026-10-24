@@ -298,11 +298,8 @@
 
 /**
  * The TCP maximum segment size.
- *
- * This is should not be to set to more than
- * UIP_BUFSIZE - UIP_LLH_LEN - UIP_TCPIP_HLEN.
  */
-#define UIP_TCP_MSS     (UIP_BUFSIZE - UIP_LLH_LEN - UIP_TCPIP_HLEN)
+#define UIP_TCP_MSS     (UIP_BUFSIZE - UIP_LLH_LEN - UIP_TCPIP_HLEN - UIP_BUFFER_EXTRA)
 
 /**
  * The size of the advertised receiver's window.
@@ -326,6 +323,35 @@
  * left untouched.
  */
 #define UIP_TIME_WAIT_TIMEOUT 120
+
+/**
+ * The number of UIP_TIMER sweeps that make one idle-aging period,
+ * i.e. how many times uip_periodic() runs per second in this project.
+ * Counted in an 8-bit variable, so 255 is the maximum.
+ *
+ * \hideinitializer
+ */
+#ifndef UIP_CONF_IDLE_PERIODS
+#define UIP_IDLE_PERIODS 2
+#else /* UIP_CONF_IDLE_PERIODS */
+#define UIP_IDLE_PERIODS UIP_CONF_IDLE_PERIODS
+#endif /* UIP_CONF_IDLE_PERIODS */
+
+/**
+ * The number of idle-aging periods after which an ESTABLISHED
+ * connection with a silent peer is aborted, or 0 to keep such
+ * connections forever (the classic uIP behaviour). TCP itself has no
+ * idle timeout, so a peer that vanished without FIN or RST would
+ * otherwise occupy its connection slot until a reboot. Counted in the
+ * connection's 8-bit retransmission timer, so 255 is the maximum.
+ *
+ * \hideinitializer
+ */
+#ifndef UIP_CONF_IDLE_TIMEOUT
+#define UIP_IDLE_TIMEOUT 0
+#else /* UIP_CONF_IDLE_TIMEOUT */
+#define UIP_IDLE_TIMEOUT UIP_CONF_IDLE_TIMEOUT
+#endif /* UIP_CONF_IDLE_TIMEOUT */
 
 
 /** @} */
@@ -381,8 +407,19 @@
 #define UIP_BUFSIZE UIP_CONF_BUFFER_SIZE
 #endif /* UIP_CONF_BUFFER_SIZE */
 
+/**
+ * Bytes of uip_buf kept out of the advertised MSS.
+ *
+ * \hideinitializer
+ */
+#ifndef UIP_CONF_BUFFER_EXTRA
+#define UIP_BUFFER_EXTRA 0
+#else /* UIP_CONF_BUFFER_EXTRA */
+#define UIP_BUFFER_EXTRA UIP_CONF_BUFFER_EXTRA
+#endif /* UIP_CONF_BUFFER_EXTRA */
 
-extern __xdata uint8_t uip_buf[UIP_CONF_BUFFER_SIZE+2];
+
+extern __xdata uint8_t uip_buf[UIP_CONF_BUFFER_ALLOC_SIZE];
 
 /**
  * Determines if statistics support should be compiled in.
@@ -428,6 +465,20 @@ extern __xdata uint8_t uip_buf[UIP_CONF_BUFFER_SIZE+2];
 #endif /* UIP_CONF_BROADCAST */
 
 /**
+ * Build the IP forwarding module.
+ *
+ * uip-fw.c forwards packets between several network interfaces. A
+ * single-interface device does not call it and should not pay for it.
+ *
+ * \hideinitializer
+ */
+#ifndef UIP_CONF_FORWARDING
+#define UIP_FORWARDING 0
+#else /* UIP_CONF_FORWARDING */
+#define UIP_FORWARDING UIP_CONF_FORWARDING
+#endif /* UIP_CONF_FORWARDING */
+
+/**
  * Print out a uIP log message.
  *
  * This function must be implemented by the module that uses uIP, and
@@ -447,7 +498,7 @@ void uip_log(char *msg);
 #ifdef UIP_CONF_LLH_LEN
 #define UIP_LLH_LEN UIP_CONF_LLH_LEN
 #else /* UIP_CONF_LLH_LEN */
-#define UIP_LLH_LEN     ETHER_HEADER_SIZE + RTL_FRAME_DESC_SIZE
+#define UIP_LLH_LEN     (ETHER_HEADER_SIZE + RTL_FRAME_DESC_SIZE)
 #endif /* UIP_CONF_LLH_LEN */
 
 /** @} */

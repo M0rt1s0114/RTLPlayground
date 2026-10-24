@@ -97,6 +97,21 @@ typedef unsigned short uip_stats_t;
 #define UIP_CONF_MAX_CONNECTIONS 1
 
 /**
+ * This httpd closes after every response, so an ESTABLISHED connection
+ * that stays idle is a peer that died or never sent its request. With a
+ * single connection slot it would hold the web UI until the next power
+ * cycle, so it is aged out instead.
+ *
+ * uip_periodic() runs from idle() once per system tick; interrupt
+ * wake-ups only add sweeps, so the timeout can fire early but never
+ * late.
+ *
+ * \hideinitializer
+ */
+#define UIP_CONF_IDLE_PERIODS 200
+#define UIP_CONF_IDLE_TIMEOUT 30
+
+/**
  * Maximum number of listening TCP ports. TODO: increase this!
  *
  * \hideinitializer
@@ -106,9 +121,27 @@ typedef unsigned short uip_stats_t;
 /**
  * uIP buffer size.
  *
+ * Sized to the largest frame the CPU port accepts on ingress: anything above
+ * that the NIC drops in hardware, so a larger buffer only costs XDATA. Measured
+ * with ICMP, which bypasses MSS and so probes the hardware directly: a 1502-byte
+ * payload is answered and 1503 is not, which puts the frame at 1556 bytes of
+ * uip_buf. The limit is the NIC's rather than a port's, so how the frame was
+ * tagged on the wire does not change it.
+ *
  * \hideinitializer
  */
-#define UIP_CONF_BUFFER_SIZE     2200
+#define UIP_CONF_BUFFER_SIZE     1556
+
+/* Backing storage includes padding for the NIC's eight-byte DMA transfers.
+ * Keep UIP_CONF_BUFFER_SIZE as the logical frame/MSS limit. */
+#define UIP_CONF_BUFFER_ALLOC_SIZE ((UIP_CONF_BUFFER_SIZE + 7U) & ~7U)
+
+/**
+ * Bytes of the buffer kept out of the advertised MSS.
+ *
+ * \hideinitializer
+ */
+#define UIP_CONF_BUFFER_EXTRA    30
 
 /**
  * CPU byte order.

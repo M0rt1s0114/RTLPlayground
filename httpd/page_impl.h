@@ -1,19 +1,30 @@
 #ifndef __PAGE_IMPL_H__
 #define __PAGE_IMPL_H__
 
-void send_counters(char port);
+#include <stdbool.h>
+
+extern __code const uint8_t * __code const HTTP_RESPONCE_TXT;
+
+void itoa16_html(uint16_t v);
+
+bool send_counters(uint8_t phys_port);
 void send_status(void);
 void send_vlan(uint16_t vlan);
 void send_basic_info(void);
 void send_bandwidth(void);
+void send_storm(void);
 void send_eee(void);
 void send_l2(uint16_t idx);
 void l2_delete(uint16_t idx);
 void send_mirror(void);
 void send_mtu(void);
+void send_isolation(void);
 void send_config(void);
 void send_cmd_log(void);
 void send_lag(void);
+void send_stp(void);
+void send_lldp(void);
+void send_lacp(void);
 void send_vlanlist(void);
 
 /*  Convert only the lower nibble to ascii HEX char.
