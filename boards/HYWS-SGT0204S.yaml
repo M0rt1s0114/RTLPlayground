@@ -1,0 +1,5 @@
+# HYWS-SGT0204S profile: kept as its own target to mark the model as supported.
+# The hardware parameters come from the upstream-verified 2G5F4_10G2_V1.01 board.
+machine_id: HYWS-SGT0204S
+machine_name: "HYVision SGT0204S"
+include: 2G5F4_10G2_V1_01

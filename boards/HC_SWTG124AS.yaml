@@ -1,0 +1,5 @@
+# Alias profile: same hardware as PCB_SWTG024AS_A_2_0_1, kept as its own machine target so the
+# model shows up as a supported board (see boards/README.md, "include").
+machine_id: HC_SWTG124AS
+machine_name: "Horaco HC-SWTG124AS"
+include: PCB_SWTG024AS_A_2_0_1

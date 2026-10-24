@@ -1,0 +1,5 @@
+# Alias profile: same hardware as SWTG018AS_A_V_2_0, kept as its own machine target so the
+# model shows up as a supported board (see boards/README.md, "include").
+machine_id: 2G08110GSN
+machine_name: "MokerLink 2G08110GSN"
+include: SWTG018AS_A_V_2_0

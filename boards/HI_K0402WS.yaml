@@ -1,0 +1,5 @@
+# Alias profile: same hardware as PCB_K0402WS_V3, kept as its own machine target so the
+# model shows up as a supported board (see boards/README.md, "include").
+machine_id: HI_K0402WS
+machine_name: "PCB-K0402WS-V3.0"
+include: PCB_K0402WS_V3

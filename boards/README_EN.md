@@ -83,6 +83,29 @@ led_mux:                        # 28 bytes, used when led_mux_custom = 1
 #   reg_bit_set(RTL837X_REG_LED_GLB_IO_EN, 6);
 ```
 
+## Reuse / include (dts/dtsi style)
+
+When a model shares the hardware of an existing board, do not copy the whole
+file - declare an include:
+
+```yaml
+machine_id:   HYWS-SGT0204S          # own target name (dashes allowed)
+machine_name: "HYVision SGT0204S"
+include:      2G5F4_10G2_V1_01       # inherit the base board
+```
+
+- The parent is looked up as `<include>.yaml` in the same directory; chains are
+  allowed and cycles are rejected.
+- Keys set in the child override the parent (dicts merge recursively, lists are
+  replaced); `machine_id` always comes from the child.
+- Alias models that only differ by name are just a two-line include.
+- Set `custom_init: ""` to drop the inherited boot hook.
+
+`FNS1200P`, `DEFAULT_8C_1SFP`, `HYWS-SGT0204S` and the 15 upstream alias
+targets (MokerLink 2G08110GSN, GoodTop, Hasivo S1100WP, Horaco, KP revisions,
+SKS3200-8E1X, ...) are built this way.
+
+
 ## Rules
 
 - `make boards` regenerates every `machine/` file that has a YAML counterpart.

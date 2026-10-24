@@ -1,0 +1,5 @@
+# Alias profile: same hardware as PCB_SWTG018AS_V2_1_0, kept as its own machine target so the
+# model shows up as a supported board (see boards/README.md, "include").
+machine_id: SKS3200_8E1X
+machine_name: "XikeStor SKS3200-8E1X"
+include: PCB_SWTG018AS_V2_1_0

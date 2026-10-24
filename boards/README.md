@@ -77,6 +77,26 @@ led_mux:                        # 28 个字节，led_mux_custom=1 时使用
 #   reg_bit_set(RTL837X_REG_LED_GLB_IO_EN, 6);
 ```
 
+## 复用 / include（类似 dts/dtsi）
+
+如果一款机型与已有板卡**硬件相同或大部分相同**，不必复制整份配置，声明 `include` 即可：
+
+```yaml
+machine_id:   HYWS-SGT0204S          # 仍保留自己的 target 名（可以带 '-'）
+machine_name: "HYVision SGT0204S"    # 自己的显示名
+include:      2G5F4_10G2_V1_01       # 继承这块板卡的字段
+```
+
+- 父板卡按同目录下的 `<include 值>.yaml` 查找，支持链式 include；循环引用会报错。
+- 子文件里出现的字段覆盖父文件（字典递归合并，列表整段替换）；`machine_id` 总是用子文件自己的。
+- 只想改名字、其余完全一样的“别名机型”就写成两行 include，别复制配置。
+- 想关掉从父板卡继承的初始化代码，可以写 `custom_init: ""`。
+
+仓库里 `FNS1200P`、`DEFAULT_8C_1SFP`、`HYWS-SGT0204S` 以及 15 个上游别名机型
+（MokerLink 2G08110GSN、GoodTop、Hasivo S1100WP、Horaco、KP 各版本、SKS3200-8E1X 等）
+都是这样组织的。
+
+
 ## 生成规则
 
 - `make boards` —— 按 `boards/*.yaml` 全量重生成 `machine/` 下对应的文件。

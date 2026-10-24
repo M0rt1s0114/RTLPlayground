@@ -48,6 +48,38 @@ def load_symbols(root: Path):
     return gpio | {"GPIO_NA"}, ledsyms, high
 
 
+def deep_merge(base, override):
+    """Merge a child board description over its parent (dicts merge,
+    lists and scalars are replaced)."""
+    out = dict(base)
+    for k, v in override.items():
+        if isinstance(v, dict) and isinstance(out.get(k), dict):
+            out[k] = deep_merge(out[k], v)
+        else:
+            out[k] = v
+    return out
+
+
+def load_board(path, stack=None):
+    """Load a board YAML, resolving an optional "include: <other_board>"
+    chain (dts/dtsi style).  The child overrides the parent's fields."""
+    path = Path(path)
+    stack = stack or []
+    if path in stack:
+        raise SystemExit("include cycle: " + " -> ".join(str(x) for x in stack + [path]))
+    board = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    base_name = board.pop("include", None)
+    if base_name:
+        base_path = path.parent / (str(base_name) + ".yaml")
+        if not base_path.exists():
+            raise SystemExit(f"{path}: include target {base_path} does not exist")
+        parent = load_board(base_path, stack + [path])
+        board = deep_merge(parent, board)
+    if "machine_id" not in board:
+        board["machine_id"] = path.stem
+    return board
+
+
 def fmt_int_array(values, per_line=None):
     inner = ", ".join(str(int(v)) for v in values)
     return "{" + inner + "}"
@@ -71,8 +103,8 @@ def yaml_bool_int(v):
 
 
 def generate(board, mid, gpio_syms, led_syms, high_syms):
-    if not re.fullmatch(r"[A-Za-z0-9_]+", mid):
-        raise SystemExit(f"machine_id '{mid}' is not a valid C identifier")
+    if not re.fullmatch(r"[A-Za-z0-9_-]+", mid):
+        raise SystemExit(f"machine_id '{mid}' may only contain letters, digits, '_' and '-'")
     if board.get("machine_id") and board["machine_id"] != mid:
         raise SystemExit(f"{mid}: machine_id '{board['machine_id']}' does not match file name")
 
@@ -183,9 +215,10 @@ def generate(board, mid, gpio_syms, led_syms, high_syms):
         c.append("\t.flash_sio = 1,\n")
     c.append("};\n")
 
+    guard = re.sub(r"[^A-Za-z0-9]", "_", mid).upper()
     h = [HEADER.format(mid=mid),
-         f"#ifndef _MACHINE_{mid.upper()}_H_\n",
-         f"#define _MACHINE_{mid.upper()}_H_\n\n",
+         f"#ifndef _MACHINE_{guard}_H_\n",
+         f"#define _MACHINE_{guard}_H_\n\n",
          f'#define MACHINE_MODEL "{name}"\n',
          f"#define MACHINE_CHIPSET {chipset}\n"]
     if board.get("min_port") is not None:
@@ -213,7 +246,7 @@ def main():
     yaml_path = Path(sys.argv[1])
     outdir = Path(sys.argv[2])
     mid = yaml_path.stem
-    board = yaml.safe_load(yaml_path.read_text(encoding="utf-8")) or {}
+    board = load_board(yaml_path)
     root = Path.cwd()
     gpio_syms, led_syms, high_syms = load_symbols(root)
     c_text, h_text, init_text = generate(board, mid, gpio_syms, led_syms, high_syms)

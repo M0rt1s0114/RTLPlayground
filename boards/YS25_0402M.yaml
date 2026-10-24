@@ -1,0 +1,5 @@
+# Alias profile: same hardware as SIRIVISION_S25G2206FP_V1_1, kept as its own machine target so the
+# model shows up as a supported board (see boards/README.md, "include").
+machine_id: YS25_0402M
+machine_name: "YuanLey YS25-0402M"
+include: SIRIVISION_S25G2206FP_V1_1

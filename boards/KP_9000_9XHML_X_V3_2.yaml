@@ -1,0 +1,5 @@
+# Alias profile: same hardware as KP_9000_9XHML_X_V3_1, kept as its own machine target so the
+# model shows up as a supported board (see boards/README.md, "include").
+machine_id: KP_9000_9XHML_X_V3_2
+machine_name: "keepLink KP-9000-9XHML-X V3.2"
+include: KP_9000_9XHML_X_V3_1
