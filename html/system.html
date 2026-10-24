@@ -32,6 +32,22 @@
         </div>
       </div>
       <div class="card" style="margin-top:20px;max-width:420px;">
+        <h2 style="margin-top:0;">主机名</h2>
+        <div class="row"><div class="lcol"><label for="hostname">Hostname</label></div>
+          <div class="rcol"><input id="hostname" type="text" maxlength="23" style="width:220px;"></div></div>
+        <button id="hostname_sub" onclick="hostnameSub();">应用主机名</button>
+      </div>
+      <div class="card" style="margin-top:20px;max-width:420px;">
+        <h2 style="margin-top:0;">Syslog</h2>
+        <div class="row"><div class="lcol"><label for="syslog_en">启用</label></div>
+          <div class="rcol"><input type="checkbox" id="syslog_en"></div></div>
+        <div class="row"><div class="lcol"><label for="syslog_ip">服务器 IP</label></div>
+          <div class="rcol"><input id="syslog_ip" type="text" style="width:160px;" placeholder="192.168.1.10"></div></div>
+        <div class="row"><div class="lcol"><label for="syslog_port">端口</label></div>
+          <div class="rcol"><input id="syslog_port" type="number" min="1" max="65535" style="width:100px;" placeholder="514"></div></div>
+        <button id="syslog_sub" onclick="syslogSub();">应用 Syslog</button>
+      </div>
+      <div class="card" style="margin-top:20px;max-width:420px;">
         <h2 style="margin-top:0;">Flash 存储</h2>
         <p class="note">将当前运行配置保存到 Flash 持久化存储。</p>
         <button id="flash_sub" onclick="flashSave();">保存配置到 Flash</button>

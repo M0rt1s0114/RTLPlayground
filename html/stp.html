@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FreeSwitchOS · 生成树</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="/main.js"></script>
+</head>
+<body>
+  <nav id="sidebar"></nav>
+  <div class="main-wrap">
+    <h1>生成树（STP / RSTP）</h1>
+    <div id="ports"></div>
+    <div class="card" style="max-width:520px;">
+      <div class="row"><div class="lcol"><label for="stp-on">启用生成树</label></div>
+        <div class="rcol"><input type="checkbox" id="stp-on" onchange="stpToggle();"></div></div>
+      <div class="row"><div class="lcol"><label for="stp-rstp">协议版本</label></div>
+        <div class="rcol"><select id="stp-rstp"><option value="rstp">RSTP (802.1w)</option><option value="stp">STP (802.1D)</option></select></div></div>
+      <div class="row"><div class="lcol"><label for="stp-prio">桥优先级 0-15</label></div>
+        <div class="rcol"><input type="number" id="stp-prio" min="0" max="15" style="width:90px;"></div></div>
+      <div class="row"><div class="lcol"><label for="stp-hello">Hello 秒 1-10</label></div>
+        <div class="rcol"><input type="number" id="stp-hello" min="1" max="10" style="width:90px;"></div></div>
+      <div class="row"><div class="lcol"><label for="stp-maxage">Max Age 秒 6-40</label></div>
+        <div class="rcol"><input type="number" id="stp-maxage" min="6" max="40" style="width:90px;"></div></div>
+      <div class="row"><div class="lcol"><label for="stp-fwd">Forward Delay 秒 4-30</label></div>
+        <div class="rcol"><input type="number" id="stp-fwd" min="4" max="30" style="width:90px;"></div></div>
+      <div class="row"><div class="lcol"><label for="stp-txhold">Tx Hold 1-10</label></div>
+        <div class="rcol"><input type="number" id="stp-txhold" min="1" max="10" style="width:90px;"></div></div>
+      <div style="margin-top:12px;"><button onclick="stpApply();">应用桥设置</button></div>
+    </div>
+    <h2>运行状态</h2>
+    <div class="card" style="max-width:760px;">
+      <div class="row"><div class="lcol">根桥</div><div class="rcol" id="stp-root">—</div></div>
+      <div class="row"><div class="lcol">本机桥 MAC</div><div class="rcol" id="stp-my">—</div></div>
+      <div class="row"><div class="lcol">根路径开销</div><div class="rcol" id="stp-cost">—</div></div>
+      <div class="row"><div class="lcol">根端口</div><div class="rcol" id="stp-rootport">—</div></div>
+      <div class="row"><div class="lcol">拓扑变更计数</div><div class="rcol" id="stp-tc">—</div></div>
+    </div>
+    <h2>端口状态</h2>
+    <table style="width:100%;">
+      <thead><tr><th>端口</th><th>角色</th><th>状态</th><th>路径开销</th><th>优先级</th><th>P2P</th><th>启用</th><th>边缘</th><th>自动边缘</th><th>BPDU 保护</th><th>根保护</th><th>过滤</th></tr></thead>
+      <tbody id="stp-ports"></tbody>
+    </table>
+    <p class="note">更细的单端口设置（edge / cost / prio / guard / filter / p2p）与控制台命令一致，可在系统设置的控制台里用 <code>stp port N …</code> 配置；LAG 用 <code>stp lag N …</code>。</p>
+  </div>
+  <script src="/stp.js"></script>
+  <script src="/navigation.js"></script>
+</body>
+</html>

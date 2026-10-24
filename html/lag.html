@@ -13,10 +13,38 @@
     <h1>链路聚合组（LAG）</h1>
     <div id="ports"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:900px;">
-      <div class="card"><h2 style="margin-top:0;margin-bottom:12px;">LAG 1</h2><div id="mLAG0"></div><button style="margin-top:12px;" id="l_sub0" onclick="lagSub(0);">应用 LAG 1</button></div>
-      <div class="card"><h2 style="margin-top:0;margin-bottom:12px;">LAG 2</h2><div id="mLAG1"></div><button style="margin-top:12px;" id="l_sub1" onclick="lagSub(1);">应用 LAG 2</button></div>
-      <div class="card"><h2 style="margin-top:0;margin-bottom:12px;">LAG 3</h2><div id="mLAG2"></div><button style="margin-top:12px;" id="l_sub2" onclick="lagSub(2);">应用 LAG 3</button></div>
-      <div class="card"><h2 style="margin-top:0;margin-bottom:12px;">LAG 4</h2><div id="mLAG3"></div><button style="margin-top:12px;" id="l_sub3" onclick="lagSub(3);">应用 LAG 4</button></div>
+      <div class="card"><h2 style="margin-top:0;margin-bottom:12px;">LAG 1</h2><div id="mLAG0"></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+        <button id="l_sub0" onclick="lagSub(0);">应用 LAG 1</button>
+        <button onclick="lacpEnable(0);">启用 LACP</button>
+        <button onclick="lacpDisable(0);">关闭 LACP</button>
+      </div></div>
+      <div class="card"><h2 style="margin-top:0;margin-bottom:12px;">LAG 2</h2><div id="mLAG1"></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+        <button id="l_sub1" onclick="lagSub(1);">应用 LAG 2</button>
+        <button onclick="lacpEnable(1);">启用 LACP</button>
+        <button onclick="lacpDisable(1);">关闭 LACP</button>
+      </div></div>
+      <div class="card"><h2 style="margin-top:0;margin-bottom:12px;">LAG 3</h2><div id="mLAG2"></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+        <button id="l_sub2" onclick="lagSub(2);">应用 LAG 3</button>
+        <button onclick="lacpEnable(2);">启用 LACP</button>
+        <button onclick="lacpDisable(2);">关闭 LACP</button>
+      </div></div>
+      <div class="card"><h2 style="margin-top:0;margin-bottom:12px;">LAG 4</h2><div id="mLAG3"></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+        <button id="l_sub3" onclick="lagSub(3);">应用 LAG 4</button>
+        <button onclick="lacpEnable(3);">启用 LACP</button>
+        <button onclick="lacpDisable(3);">关闭 LACP</button>
+      </div></div>
+    </div>
+    <h2 style="margin-top:28px;">LACP（802.3ad）状态</h2>
+    <div class="card" style="margin-top:12px;max-width:900px;">
+      <p id="lacp-on" class="note">—</p>
+      <table id="lacptbl" style="width:100%;margin-bottom:12px;">
+        <thead><tr><th>组</th><th>候选成员</th><th>聚合有效</th><th>活动成员</th><th>聚合器 MAC</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <table id="lacpports" style="width:100%;">
+        <thead><tr><th>端口</th><th>LACP 组</th><th>Actor 状态</th><th>Partner 状态</th><th>RX 状态</th><th>RX 计数</th><th>Partner 系统</th></tr></thead>
+        <tbody></tbody>
+      </table>
     </div>
     <script src="/lag.js"></script>
   </div>

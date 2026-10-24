@@ -24,6 +24,18 @@
       </thead>
     </table>
     <script src="/bandwidth.js"></script>
+    <h2 style="margin-top:32px;">风暴控制（Storm Control）</h2>
+    <p class="note">对广播 / 组播 / 未知单播 / 未知组播限速；单位 pps 或 kbit/s，限速值 0 表示关闭。</p>
+    <table id="stormtable" style="width:100%;">
+      <thead>
+        <tr>
+          <th rowspan="2">端口</th><th colspan="2">广播</th><th colspan="2">组播</th>
+          <th colspan="2">未知单播</th><th colspan="2">未知组播</th><th rowspan="2">应用</th>
+        </tr>
+        <tr><th>上限</th><th>速率</th><th>上限</th><th>速率</th><th>上限</th><th>速率</th><th>上限</th><th>速率</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
   </div>
   <script src="/navigation.js"></script>
 </body>

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FreeSwitchOS · 端口隔离</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="/main.js"></script>
+</head>
+<body>
+  <nav id="sidebar"></nav>
+  <div class="main-wrap">
+    <h1>端口隔离</h1>
+    <div id="ports"></div>
+    <p class="note">行 = 源端口，列 = 允许访问的目标端口；“•”表示自身（始终允许）。默认全部允许。</p>
+    <table id="isotbl" style="width:auto;">
+      <thead></thead>
+      <tbody></tbody>
+    </table>
+    <div style="margin-top:16px;"><button onclick="isoApply();">应用隔离设置</button></div>
+  </div>
+  <script src="/isolation.js"></script>
+  <script src="/navigation.js"></script>
+</body>
+</html>

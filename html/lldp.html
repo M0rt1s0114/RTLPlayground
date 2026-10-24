@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FreeSwitchOS · LLDP</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="/main.js"></script>
+</head>
+<body>
+  <nav id="sidebar"></nav>
+  <div class="main-wrap">
+    <h1>LLDP（链路层发现）</h1>
+    <div id="ports"></div>
+    <div class="card" style="max-width:420px;">
+      <div class="row"><div class="lcol"><label for="lldp-on">启用 LLDP</label></div>
+        <div class="rcol"><input type="checkbox" id="lldp-on" onchange="lldpToggle();"></div></div>
+      <p class="note">LLDP 报文会从允许的端口发出；每个端口的许可可以单独设置。</p>
+    </div>
+    <h2>端口许可（permit / block）</h2>
+    <table style="width:100%;">
+      <thead><tr><th>端口</th><th>名称</th><th>当前状态</th><th>操作</th></tr></thead>
+      <tbody id="lldp-ports"></tbody>
+    </table>
+  </div>
+  <script src="/lldp.js"></script>
+  <script src="/navigation.js"></script>
+</body>
+</html>

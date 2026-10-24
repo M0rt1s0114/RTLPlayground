@@ -75,3 +75,61 @@ window.addEventListener("load", function() {
     const interval = setInterval(update, 2000);
   });
 });
+
+/* ── LACP ─────────────────────────────────────────────────────────────────── */
+var lacpRxNames = ['初始化', '端口禁用', '超时', '默认值', '当前'];
+
+function lacpMaskToPorts(mask) {
+  var out = [];
+  for (var i = 1; i <= numPorts; i++) if (mask & (1 << (i - 1))) out.push(i);
+  return out.join(',') || '—';
+}
+
+function lacpLoad() {
+  fetch('/lacp.json').then(function (r) { return r.json(); }).then(function (s) {
+    document.getElementById('lacp-on').textContent = 'LACP: ' + (s.on ? '已启用' : '未启用（在某个 LAG 上点“启用 LACP”）');
+    var tb = document.getElementById('lacptbl').tBodies[0];
+    tb.innerHTML = '';
+    s.lags.forEach(function (l, g) {
+      var tr = tb.insertRow();
+      tr.insertCell().textContent = 'LAG ' + (g + 1);
+      tr.insertCell().textContent = lacpMaskToPorts(parseInt(l.cfg, 16));
+      tr.insertCell().textContent = l.aggValid ? '是' : '否';
+      tr.insertCell().textContent = lacpMaskToPorts(parseInt(l.members, 16));
+      tr.insertCell().textContent = l.agg;
+    });
+    var pb = document.getElementById('lacpports').tBodies[0];
+    pb.innerHTML = '';
+    s.ports.forEach(function (p) {
+      var tr = pb.insertRow();
+      tr.insertCell().textContent = p.p;
+      tr.insertCell().textContent = (p.lag === 255 || p.lag === 0xff) ? '—' : (p.lag + 1);
+      tr.insertCell().textContent = p.a;
+      tr.insertCell().textContent = p.pt;
+      tr.insertCell().textContent = lacpRxNames[p.rs] || p.rs;
+      tr.insertCell().textContent = parseInt(p.rx, 16);
+      tr.insertCell().textContent = p.psys;
+    });
+  }).catch(function (e) { console.error('lacp.json:', e); });
+}
+
+function lacpEnable(g) {
+  var ports = [];
+  for (var i = 1; i <= numPorts; i++) {
+    var cb = document.getElementById('p_mLAG' + g + '_' + i);
+    if (cb && cb.checked) ports.push(i);
+  }
+  if (!ports.length) { alert('先勾选该组的成员端口'); return; }
+  fetch('/cmd', { method: 'POST', body: 'lag ' + (g + 1) + ' lacp ' + ports.join(' ') })
+    .then(function () { setTimeout(lacpLoad, 300); });
+}
+
+function lacpDisable(g) {
+  fetch('/cmd', { method: 'POST', body: 'lag ' + (g + 1) + ' lacp off' })
+    .then(function () { setTimeout(lacpLoad, 300); });
+}
+
+window.addEventListener('load', function () {
+  lacpLoad();
+  setInterval(lacpLoad, 2000);
+});
