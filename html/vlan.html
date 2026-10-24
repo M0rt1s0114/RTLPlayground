@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FreeSwitchOS · VLAN 配置</title>
+  <script src="/theme.js"></script>
   <link rel="stylesheet" href="style.css">
   <script src="/main.js"></script>
 </head>
@@ -36,7 +37,7 @@
     <h2>PVID 端口（入口默认 VLAN）<button type="button" style="margin-left:16px;font-size:11px;padding:4px 10px;" onclick="pvClicked(true);">全选</button></h2>
     <div id="pPorts" style="margin-bottom:20px;"></div>
     <div><button type="button" id="vlan_sub" onclick="vlanSub();">更新 / 创建 VLAN</button></div>
-    <script src="/vlan.js"></script><script src="/vlan_sub.js"></script>
+    <script src="/vlan.js"></script>
     <h2 style="margin-top:32px;">已配置 VLAN</h2>
     <table id="vlanTable" style="width:100%;">
       <thead><tr><th>VLAN</th><th>名称</th><th>成员端口</th><th>Tagged</th><th>Untagged</th><th>PVID</th><th>删除</th></tr></thead>

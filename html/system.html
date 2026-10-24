@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FreeSwitchOS · 系统设置</title>
+  <script src="/theme.js"></script>
   <link rel="stylesheet" href="style.css">
   <script src="/main.js"></script>
 </head>
@@ -48,6 +49,36 @@
         <button id="syslog_sub" onclick="syslogSub();">应用 Syslog</button>
       </div>
       <div class="card" style="margin-top:20px;max-width:420px;">
+        <h2 style="margin-top:0;">显示</h2>
+        <div class="row"><div class="lcol"><label for="theme">主题</label></div>
+          <div class="rcol"><select id="theme"></select></div></div>
+        <p class="note">主题只保存在当前浏览器。</p>
+      </div>
+      <div class="card" style="margin-top:20px;max-width:420px;">
+        <h2 style="margin-top:0;">DNS</h2>
+        <div class="row"><div class="lcol"><label for="dns1">DNS 服务器 1</label></div>
+          <div class="rcol"><input id="dns1" type="text" style="width:160px;" placeholder="223.5.5.5"></div></div>
+        <div class="row"><div class="lcol"><label for="dns2">DNS 服务器 2</label></div>
+          <div class="rcol"><input id="dns2" type="text" style="width:160px;" placeholder="可选"></div></div>
+        <p class="note" id="dns_dhcp">—</p>
+        <button id="dns_sub" onclick="dnsSub();">应用 DNS</button>
+      </div>
+      <div class="card" style="margin-top:20px;max-width:420px;">
+        <h2 style="margin-top:0;">时间 / NTP</h2>
+        <div class="row"><div class="lcol"><label for="ntp_en">启用 NTP</label></div>
+          <div class="rcol"><input type="checkbox" id="ntp_en"></div></div>
+        <div class="row"><div class="lcol"><label for="ntp_server">NTP 服务器</label></div>
+          <div class="rcol"><input id="ntp_server" type="text" style="width:220px;" placeholder="pool.ntp.org"></div></div>
+        <div class="row"><div class="lcol"><label for="ntp_interval">同步间隔 [分钟]</label></div>
+          <div class="rcol"><input id="ntp_interval" type="number" min="1" max="1440" style="width:100px;"></div></div>
+        <div class="row"><div class="lcol"><label for="ntp_tz">时区</label></div>
+          <div class="rcol"><input id="ntp_tz" type="text" style="width:100px;" placeholder="+08:00"></div></div>
+        <div class="row"><div class="lcol"><label for="ntp_dst">夏令时</label></div>
+          <div class="rcol"><select id="ntp_dst"><option value="off">关闭</option><option value="eu">欧洲</option><option value="us">美国</option></select></div></div>
+        <p class="note">当前时间：<span id="ntp_now">—</span><br>状态：<span id="ntp_sync">—</span></p>
+        <button id="ntp_sub" onclick="ntpSub();">应用 NTP</button>
+      </div>
+      <div class="card" style="margin-top:20px;max-width:420px;">
         <h2 style="margin-top:0;">Flash 存储</h2>
         <p class="note">将当前运行配置保存到 Flash 持久化存储。</p>
         <button id="flash_sub" onclick="flashSave();">保存配置到 Flash</button>
@@ -80,7 +111,6 @@
       </div>
     </div>
   </div>
-  <script src="/config.js"></script>
   <script src="/system.js"></script>
   <script src="/navigation.js"></script>
   <script>

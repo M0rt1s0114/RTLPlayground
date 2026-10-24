@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FreeSwitchOS · 概览</title>
+  <script src="/theme.js"></script>
   <link rel="stylesheet" href="style.css">
   <script src="/main.js"></script>
   <script src="/main_info.js"></script>
@@ -24,7 +25,7 @@
         <tr>
           <th>端口</th><th>名称</th><th>链路</th>
           <th>发送（正常）</th><th>发送（异常）</th>
-          <th>接收（正常）</th><th>接收（异常）</th>
+          <th>接收（正常）</th><th>接收（异常）</th><th>设备数</th>
         </tr>
       </thead>
       <tbody id="portStatusBody"></tbody>
@@ -47,7 +48,7 @@
     ports.forEach(function (p) {
       var tr = document.createElement('tr');
       var link = p.enabled == 0 ? '禁用' : (linkNames[p.link + 1] || '未知');
-      var cells = [p.portNum, p.name || '—', link, p.txG, p.txB, p.rxG, p.rxB];
+      var cells = [p.portNum, p.name || '—', link, p.txG, p.txB, p.rxG, p.rxB, parseInt(p.macs, 16) & 0x1fff];
       cells.forEach(function (v, i) {
         var td = document.createElement('td');
         td.textContent = v;

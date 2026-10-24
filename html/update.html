@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FreeSwitchOS · 固件升级</title>
+  <script src="/theme.js"></script>
   <link rel="stylesheet" href="style.css">
   <style>
     /* 隐藏原生 file input，用自定义按钮代替 */
@@ -53,26 +54,55 @@
   </div>
   <script src="/navigation.js"></script>
   <script>
-  function onFileChange(input) {
+  function setFileUI(ok, msg) {
+    var btn = document.getElementById('submitBtn');
+    var status = document.getElementById('fw-status');
+    if (!status) {
+      status = document.createElement('p');
+      status.id = 'fw-status';
+      status.className = 'note';
+      status.style.marginTop = '10px';
+      document.querySelector('.card').appendChild(status);
+    }
+    status.textContent = msg || '';
+    status.style.color = ok ? 'var(--grn)' : 'var(--red)';
+    btn.disabled = !ok;
+    btn.style.opacity = ok ? '1' : '.4';
+    btn.style.cursor = ok ? 'pointer' : 'not-allowed';
+  }
+
+  async function onFileChange(input) {
     var label  = document.getElementById('fileLabel');
     var nameEl = document.getElementById('file-name');
-    var btn    = document.getElementById('submitBtn');
-    if (input.files && input.files.length > 0) {
-      var name = input.files[0].name;
-      nameEl.textContent = name;
-      label.classList.add('selected');
-      label.textContent  = '✓ ' + name;
-      btn.disabled = false;
-      btn.style.opacity = '1';
-      btn.style.cursor  = 'pointer';
-    } else {
+    if (!input.files || input.files.length === 0) {
       nameEl.textContent = '未选择文件';
       label.classList.remove('selected');
-      label.textContent  = '📁 选择固件文件';
-      btn.disabled = true;
-      btn.style.opacity = '.4';
-      btn.style.cursor  = 'not-allowed';
+      label.textContent = '📁 选择固件文件';
+      return setFileUI(false, '');
     }
+    var file = input.files[0];
+    var name = file.name;
+    nameEl.textContent = name;
+    label.classList.add('selected');
+    label.textContent = '✓ ' + name;
+    setFileUI(false, '正在检查固件…');
+    if (file.size > 1000000) return setFileUI(false, '✗ 固件过大（> 1 MB）');
+    var info = {};
+    try { info = await fetch('/information.json').then(function (r) { return r.json(); }); } catch (e) {}
+    var buf = new Uint8Array(await file.arrayBuffer());
+    if (buf.length < 1024) return setFileUI(false, '✗ 文件太小，不像固件镜像');
+    if (info.hw_ver) {
+      var needle = [];
+      for (var i = 0; i < info.hw_ver.length; i++) needle.push(info.hw_ver.charCodeAt(i) & 0xff);
+      needle.push(0);
+      var found = false;
+      outer: for (var p = 0; p + needle.length <= buf.length; p++) {
+        for (var k = 0; k < needle.length; k++) if (buf[p + k] !== needle[k]) continue outer;
+        found = true; break;
+      }
+      if (!found) return setFileUI(false, '✗ 这个固件不是为「' + info.hw_ver + '」构建的，型号不匹配');
+    }
+    setFileUI(true, '✓ 固件检查通过（' + Math.round(file.size / 1024) + ' KB）');
   }
   </script>
 </body>

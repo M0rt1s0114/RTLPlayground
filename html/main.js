@@ -149,6 +149,8 @@ function update(callback){
             pAdvertised[n]=parseInt(p.adv,2);
           }
         }
+        if (p.macs !== undefined)
+          iHTML+='<tr><td>MAC 数</td><td>'+(parseInt(p.macs,16)&0x1fff)+'</td></tr>';
         iHTML+='</table>';
         var tt=document.getElementById('tt_'+(n+1));
         if(tt)tt.innerHTML=iHTML;

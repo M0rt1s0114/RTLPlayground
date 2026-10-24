@@ -8,6 +8,24 @@
   --mono:ui-monospace,'Cascadia Code',Consolas,monospace;
   --ui:system-ui,-apple-system,sans-serif;
 }
+
+/* ── 主题（与上游 SPA 同一组配色；默认 = 原 fork 深色） ───────────────────── */
+:root[data-theme="light"]{
+  --bg:#f4f6f8;--sur:#ffffff;--sur2:#eaeef2;--bdr:#d7dde4;
+  --acc:#0969da;--acdm:#0b4f9e;--acg:rgba(9,105,218,.10);
+  --grn:#158744;--red:#cf222e;--amb:#9a6700;--txt:#1a222c;--mut:#5c6773;
+}
+:root[data-theme="sel-dark"]{
+  --bg:#103c48;--sur:#184956;--sur2:#2d5b69;--bdr:#2d5b69;
+  --acc:#4695f7;--acdm:#2b5f9e;--acg:rgba(70,149,247,.18);
+  --grn:#75b938;--red:#fa5750;--amb:#dbb32d;--txt:#adbcbc;--mut:#72898f;
+}
+:root[data-theme="sel-light"]{
+  --bg:#fbf3db;--sur:#ece3cc;--sur2:#d5cdb6;--bdr:#d5cdb6;
+  --acc:#0072d4;--acdm:#0059a6;--acg:rgba(0,114,212,.12);
+  --grn:#489100;--red:#d2212d;--amb:#ad8900;--txt:#53676d;--mut:#909995;
+}
+
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{font-size:14px}
 body{background:var(--bg);color:var(--txt);font-family:var(--ui);line-height:1.6;min-height:100vh}

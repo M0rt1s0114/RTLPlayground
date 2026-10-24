@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FreeSwitchOS · 生成树</title>
+  <script src="/theme.js"></script>
   <link rel="stylesheet" href="style.css">
   <script src="/main.js"></script>
 </head>
@@ -42,7 +43,9 @@
       <thead><tr><th>端口</th><th>角色</th><th>状态</th><th>路径开销</th><th>优先级</th><th>P2P</th><th>启用</th><th>边缘</th><th>自动边缘</th><th>BPDU 保护</th><th>根保护</th><th>过滤</th></tr></thead>
       <tbody id="stp-ports"></tbody>
     </table>
-    <p class="note">更细的单端口设置（edge / cost / prio / guard / filter / p2p）与控制台命令一致，可在系统设置的控制台里用 <code>stp port N …</code> 配置；LAG 用 <code>stp lag N …</code>。</p>
+    <h2>端口 / LAG 设置</h2>
+    <div id="stp-cfg"></div>
+    <p class="note">端口设置与命令行 <code>stp port N …</code> / <code>stp lag N …</code> 完全等价；桥设置点上方“应用桥设置”。</p>
   </div>
   <script src="/stp.js"></script>
   <script src="/navigation.js"></script>
