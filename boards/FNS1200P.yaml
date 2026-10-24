@@ -1,9 +1,8 @@
 machine_id: FNS1200P
-machine_name: FNS-1200P
-isRTL8373: 0
-min_port: 3
-max_port: 8
+machine_name: "FNS-1200P"
+machine_chipset: RTL8372
 n_sfp: 2
+n_10g: 0
 log_to_phys_port:
 - 0
 - 0
@@ -34,27 +33,6 @@ is_sfp:
 - 0
 - 0
 - 1
-sfp_ports:
-- pin_detect: GPIO30_ACL_BIT3_EN
-  pin_los: GPIO37
-  pin_tx_disable: GPIO_NA
-  sds: 1
-  i2c:
-    sda: GPIO39_I2C_SDA4
-    scl: GPIO40_I2C_SCL3_MDC1
-  comment: Left SFP, logical port 8, SDS1
-- pin_detect: GPIO50_I2C_SCL2_UART1_TX
-  pin_los: GPIO51_I2C_SDA2_UART1_RX
-  pin_tx_disable: GPIO_NA
-  sds: 0
-  i2c:
-    sda: GPIO41_I2C_SDA3_MDIO1
-    scl: GPIO40_I2C_SCL3_MDC1
-  comment: Right SFP, logical port 3, SDS0
-reset_pin: GPIO_NA
-high_leds:
-  mux: LED_27 | LED_28_SYS | LED_29
-  enable: LED_28_SYS | LED_29
 port_led_set:
 - 0
 - 0
@@ -65,15 +43,34 @@ port_led_set:
 - 0
 - 0
 - 1
+sfp_ports:
+- pin_detect: GPIO30_ACL_BIT3_EN
+  pin_los: GPIO37
+  pin_tx_disable: GPIO_NA
+  sds: 1
+  i2c:
+    sda: GPIO39_I2C_SDA4
+    scl: GPIO40_I2C_SCL3_MDC1
+- pin_detect: GPIO50_I2C_SCL2_UART1_TX
+  pin_los: GPIO51_I2C_SDA2_UART1_RX
+  pin_tx_disable: GPIO_NA
+  sds: 0
+  i2c:
+    sda: GPIO41_I2C_SDA3_MDIO1
+    scl: GPIO40_I2C_SCL3_MDC1
+reset_pin: GPIO_NA
+high_leds:
+  mux: "LED_27 | LED_28_SYS | LED_29"
+  enable: "LED_28_SYS | LED_29"
 led_sets:
-- - LEDS_2G5 | LEDS_LINK | LEDS_ACT
-  - '0'
-  - LEDS_1G | LEDS_100M | LEDS_10M | LEDS_LINK | LEDS_ACT
-  - '0'
-- - LEDS_10G | LEDS_2G5 | LEDS_1G | LEDS_100M | LEDS_10M | LEDS_LINK | LEDS_ACT
-  - '0'
-  - '0'
-  - '0'
+- - "LEDS_2G5 | LEDS_LINK | LEDS_ACT"
+  - "0"
+  - "LEDS_1G | LEDS_100M | LEDS_10M | LEDS_LINK | LEDS_ACT"
+  - "0"
+- - "LEDS_10G | LEDS_2G5 | LEDS_1G | LEDS_100M | LEDS_10M | LEDS_LINK | LEDS_ACT"
+  - "0"
+  - "0"
+  - "0"
 led_mux_custom: 1
 led_mux:
 - '0x3f'
@@ -84,10 +81,10 @@ led_mux:
 - '0x3f'
 - '0x3f'
 - '0x3f'
-- '0x0f'
-- '0x0c'
-- '0x0d'
-- '0x0e'
+- '0xf'
+- '0xc'
+- '0xd'
+- '0xe'
 - '0x10'
 - '0x11'
 - '0x12'
@@ -104,5 +101,5 @@ led_mux:
 - '0x21'
 - '0x22'
 - '0x23'
-custom_init: |-
+custom_init: |
   reg_bit_set(RTL837X_REG_LED_GLB_IO_EN, 6);

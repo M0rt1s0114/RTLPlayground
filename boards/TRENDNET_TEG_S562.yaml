@@ -1,9 +1,8 @@
 machine_id: TRENDNET_TEG_S562
-machine_name: Trendnet TEG-S562
-isRTL8373: 0
-min_port: 3
-max_port: 8
+machine_name: "Trendnet TEG-S562"
+machine_chipset: RTL8372
 n_sfp: 2
+n_10g: 0
 log_to_phys_port:
 - 0
 - 0
@@ -34,6 +33,16 @@ is_sfp:
 - 0
 - 0
 - 2
+port_led_set:
+- 0
+- 0
+- 0
+- 1
+- 0
+- 0
+- 0
+- 0
+- 1
 sfp_ports:
 - pin_detect: GPIO38
   pin_los: GPIO50_I2C_SCL2_UART1_TX
@@ -50,22 +59,16 @@ sfp_ports:
     sda: GPIO49_I2C_SDA1
     scl: GPIO48_I2C_SCL1
 reset_pin: GPIO_NA
-port_led_set:
-- 0
-- 0
-- 0
-- 1
-- 0
-- 0
-- 0
-- 0
-- 1
+high_leds:
+  mux: "0"
+  enable: "0"
 led_sets:
-- - '0'
-  - LEDS_2G5 | LEDS_LINK | LEDS_ACT
-  - LEDS_1G | LEDS_100M | LEDS_10M | LEDS_LINK | LEDS_ACT
-  - '0'
-- - '0'
-  - '0'
-  - LEDS_10G | LEDS_1G | LEDS_LINK | LEDS_ACT
-  - '0'
+- - "0"
+  - "LEDS_2G5 | LEDS_LINK | LEDS_ACT"
+  - "LEDS_1G | LEDS_100M | LEDS_10M | LEDS_LINK | LEDS_ACT"
+  - "0"
+- - "0"
+  - "0"
+  - "LEDS_10G | LEDS_1G | LEDS_LINK | LEDS_ACT"
+  - "0"
+led_mux_custom: 0

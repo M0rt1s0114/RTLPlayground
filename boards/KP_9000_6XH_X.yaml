@@ -1,9 +1,8 @@
 machine_id: KP_9000_6XH_X
-machine_name: keepLink KP-9000-6XH-X
-isRTL8373: 0
-min_port: 3
-max_port: 8
+machine_name: "keepLink KP-9000-6XH-X"
+machine_chipset: RTL8372
 n_sfp: 1
+n_10g: 0
 log_to_phys_port:
 - 0
 - 0
@@ -34,6 +33,16 @@ is_sfp:
 - 0
 - 0
 - 1
+port_led_set:
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
 sfp_ports:
 - pin_detect: GPIO30_ACL_BIT3_EN
   pin_los: GPIO37
@@ -43,8 +52,12 @@ sfp_ports:
     sda: GPIO39_I2C_SDA4
     scl: GPIO40_I2C_SCL3_MDC1
 reset_pin: GPIO_NA
+high_leds:
+  mux: "0"
+  enable: "0"
 led_sets:
-- - LEDS_2G5 | LEDS_1G | LEDS_100M | LEDS_10M | LEDS_LINK | LEDS_ACT | LEDS_10G
-  - LEDS_2G5 | LEDS_LINK | LEDS_10G
-  - LEDS_1G | LEDS_LINK
-  - '0'
+- - "LEDS_2G5 | LEDS_1G | LEDS_100M | LEDS_10M | LEDS_LINK | LEDS_ACT | LEDS_10G"
+  - "LEDS_2G5 | LEDS_LINK | LEDS_10G"
+  - "LEDS_1G | LEDS_LINK"
+  - "0"
+led_mux_custom: 0

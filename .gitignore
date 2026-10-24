@@ -14,3 +14,7 @@ build/
 !test/stub/html_data.h
 !test/stub/version.h
 .vscode
+
+# Python bytecode from tools/ (board generator, minifier)
+__pycache__/
+*.pyc

@@ -14,6 +14,14 @@ AFLAGS= -plosgff
 SUBDIRS := tools
 SUBDIRSCLEAN=$(addsuffix clean,$(SUBDIRS))
 
+# Python is used for the board generator (boards/*.yaml) and for the web-asset
+# minifier.  Override with PYTHON=python on hosts that have no python3 alias.
+PYTHON ?= python3
+
+# Fork board definitions: boards/<MACHINE>.yaml is the source of truth and
+# "make boards" regenerates the machine/<MACHINE>.{c,h,_init.c} files.
+BOARD_YAMLS := $(sort $(wildcard boards/*.yaml))
+
 # $MACHINE selects machine/$(MACHINE).c as the board definition and is passed
 # on as -DMACHINE_NAME, which machine.h uses to include machine/$(MACHINE).h.
 # Board selection itself needs no MACHINE_* symbol for #if chains, so the
@@ -81,12 +89,23 @@ create_build_dir:
 # Every machine is a pair machine/<MACHINE>.c + machine/<MACHINE>.h. Selecting
 # them by name means no #if/#elif chain, so an unknown or empty $MACHINE is
 # caught here instead of by a #error further down the build.
+#
+# Fork boards are authored in boards/<MACHINE>.yaml; the machine/ files are
+# generated from them and committed.  The rule below regenerates the files when
+# the YAML is newer, so a plain build works without Python as long as the
+# generated files are up to date.
+ifneq ($(wildcard boards/$(MACHINE).yaml),)
+$(MACHINE_SRC) $(MACHINE_SRC:.c=.h):
+	@echo "  GEN  $(MACHINE_SRC)  <-  boards/$(MACHINE).yaml"
+	@$(PYTHON) tools/gen_machine_c.py boards/$(MACHINE).yaml machine
+else
 $(MACHINE_SRC):
 	@echo "ERROR: MACHINE='$(MACHINE)' has no definition (expected $(MACHINE_SRC))." >&2
 	@echo "       Every machine is one file pair under machine/, named after the" >&2
 	@echo "       MACHINE_* symbol it defines; see machine/*.c for the full list." >&2
 	@echo "       Example: make MACHINE=KP_9000_6XHML_X2" >&2
 	@false
+endif
 
 # Keep the per-machine definition in first position to fail immediately on an
 # invalid $MACHINE value
@@ -149,7 +168,7 @@ HTML_MIN := $(BUILDDIR)/html_min
 html_min: $(HTML)
 	rm -rf $(HTML_MIN)
 	mkdir -p $(HTML_MIN)
-	@for f in $(HTML); do python3 tools/minify.py $$f $(HTML_MIN)/$$(basename $$f) || exit 1; done
+	@for f in $(HTML); do $(PYTHON) tools/minify.py $$f $(HTML_MIN)/$$(basename $$f) || exit 1; done
 
 html_data.c html_data.h &: $(HTML) | tools html_min
 	tools/$(BUILDDIR)/fileadder -a $(HTML_LOCATION) -s $(IMAGESIZE) -b BANK1 -z -d $(HTML_MIN) -p html_data
@@ -211,7 +230,7 @@ $(BUILDDIR)/rtlplayground-$(FILENAME_EXTENSION).bin: $(BUILDDIR)/rtlplayground.i
 	tools/$(BUILDDIR)/crc_calculator -u $@
 	ln -sf $(MACHINE)/rtlplayground-$(FILENAME_EXTENSION).bin $(BUILDDIR)/../rtlplayground.bin
 
-.PHONY: clean distclean all $(SUBDIRS) $(SUBDIRSCLEAN) create_build_dir
+.PHONY: clean distclean all $(SUBDIRS) $(SUBDIRSCLEAN) create_build_dir boards board_check
 
 # Every machine/ definition is compiled, so a machine added to machine/ is
 # covered without registering it anywhere. The _init.c files are excluded here:
@@ -235,5 +254,25 @@ machine_check:
 	$(CC) $(MACHINE_LESS_CC_FLAGS) -DMACHINE_NAME=$${MACHINE} -MMD -o $(BUILDDIR)/tmp/machine_check -c $$INIT; \
 	done
 	@rm -rf $(BUILDDIR)/tmp
+
+# Regenerate every machine/<MACHINE>.{c,h,_init.c} from its YAML board file.
+# The generated files are committed so that a plain "make MACHINE=..." does not
+# need Python; run this after editing boards/*.yaml and commit the result.
+.PHONY: boards board_check
+boards:
+	@set -e; \
+	for y in $(BOARD_YAMLS); do \
+		echo "  GEN  machine/$$(basename $$y .yaml)  <-  $$y"; \
+		$(PYTHON) tools/gen_machine_c.py $$y machine; \
+	done
+
+# Fail when machine/ does not match boards/*.yaml (used by CI).
+board_check: boards
+	@if ! git diff --exit-code -- machine/ >/dev/null 2>&1; then \
+		echo "ERROR: machine/ definitions are out of date with boards/*.yaml" >&2; \
+		echo "       run 'make boards' and commit the regenerated files" >&2; \
+		git diff --stat -- machine/ >&2; \
+		exit 1; \
+	fi
 
 -include $(DEPS)
