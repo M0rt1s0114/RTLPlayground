@@ -1,6 +1,6 @@
 var txG=new BigInt64Array(10),txB=new BigInt64Array(10),rxG=new BigInt64Array(10),rxB=new BigInt64Array(10);
 const linkS=["Disabled","Down","10M","100M","1000M","500M","10G","2.5G","5G"];
-var pState=new Int8Array(10),pIsSFP=new Int8Array(10),pAdvertised=new Int8Array(10);
+var pState=new Int8Array(10),pIsSFP=new Int8Array(10),pAdvertised=new Int8Array(10),pEnabled=new Int8Array(10);
 var numPorts=0,logToPhysPort=new Int8Array(10),physToLogPort=new Int8Array(10),portNames=new Array(10);
 var currentRequests=[],currentCallback;
 
@@ -113,12 +113,12 @@ function update(callback){
         let iHTML='<table class="tt_table">';
         if(pName)iHTML+='<tr><td>Name</td><td>'+pName+'</td></tr>';
         if(p.enabled==0){
-          pState[n]=-1;
+          pState[n]=-1;pEnabled[n]=0;
           setBg(pid,'#3a1010');setLed(pid,'#111','#111');setSvgOpacity(pid,0.4);
           iHTML+='<tr><td>Status</td><td>Disabled</td></tr>';
         } else {
           setSvgOpacity(pid,1);
-          pState[n]=p.link;
+          pState[n]=p.link;pEnabled[n]=p.enabled;
           // LED colours: link=5(2.5G) or 7(2.5G) → green+blue; 4(1G)/6(10G) → green+orange; 1/2/3 → green+green; 0 → off
           if(p.link==5||p.link==7){setLed(pid,'#22c55e','#3d8ef0');}
           else if(p.link==4||p.link==6){setLed(pid,'#22c55e','#f59e0b');}

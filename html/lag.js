@@ -134,3 +134,51 @@ window.addEventListener('load', function () {
   lacpLoad();
   setInterval(lacpLoad, 2000);
 });
+
+/* ── LAG hash 因子 ───────────────────────────────────────────────────────── */
+var HASHF = ["spa", "smac", "dmac", "sip", "dip", "sport", "dport"];
+var HASHN = ["源端口", "源 MAC", "目的 MAC", "源 IP", "目的 IP", "源端口号", "目的端口号"];
+
+function lagHashBuild() {
+  var wrap = document.getElementById('laghash_opts');
+  if (!wrap || wrap.children.length) return;
+  HASHF.forEach(function (f, i) {
+    var lbl = document.createElement('label');
+    lbl.style.display = 'flex';
+    lbl.style.gap = '6px';
+    lbl.style.alignItems = 'center';
+    var cb = document.createElement('input');
+    cb.type = 'checkbox'; cb.id = 'hash_' + f;
+    lbl.appendChild(cb);
+    lbl.appendChild(document.createTextNode(HASHN[i]));
+    wrap.appendChild(lbl);
+  });
+}
+
+function lagHashLoad() {
+  lagHashBuild();
+  var g = parseInt(document.getElementById('laghash_group').value, 10);
+  fetch('/lag.json').then(function (r) { return r.json(); }).then(function (s) {
+    var l = s[g - 1];
+    var hash = parseInt(l.hash, 16) || 0;
+    HASHF.forEach(function (f, i) {
+      var cb = document.getElementById('hash_' + f);
+      if (cb) cb.checked = !!((hash >> i) & 1);
+    });
+  }).catch(function (e) { console.error('lag.json:', e); });
+}
+
+async function lagHashApply() {
+  var g = parseInt(document.getElementById('laghash_group').value, 10);
+  var types = HASHF.filter(function (f) { return document.getElementById('hash_' + f).checked; });
+  if (!types.length) { alert(window.t ? t('至少选择一个 hash 因子（固件不接受清空）') : '至少选择一个 hash 因子（固件不接受清空）'); return; }
+  try {
+    await fetch('/cmd', { method: 'POST', body: 'laghash ' + g + ' ' + types.join(' ') });
+    setTimeout(lagHashLoad, 300);
+  } catch (e) { console.error(e); }
+}
+
+window.addEventListener('load', function () {
+  lagHashBuild();
+  lagHashLoad();
+});

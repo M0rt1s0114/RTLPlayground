@@ -251,3 +251,38 @@ async function vlanSub() {
   }
 }
 
+
+/* ── ingress filter ──────────────────────────────────────────────────────── */
+function buildIngress() {
+  if (!numPorts) return;
+  var wrap = document.getElementById('ingressPorts');
+  if (!wrap || wrap.children.length) return;
+  for (var i = 1; i <= numPorts; i++) {
+    var box = document.createElement('div');
+    box.innerHTML = '<label style="font-size:12px;color:var(--mut);display:block;margin-bottom:4px;">端口 ' + i + '</label>' +
+      '<select id="ing_' + i + '">' +
+      '<option value="">不改变</option>' +
+      '<option value="a">全部</option>' +
+      '<option value="u">仅 Untagged</option>' +
+      '<option value="t">仅 Tagged</option>' +
+      '</select>';
+    wrap.appendChild(box);
+  }
+}
+
+async function ingressApply() {
+  var cmds = [];
+  for (var i = 1; i <= numPorts; i++) {
+    var sel = document.getElementById('ing_' + i);
+    if (!sel || !sel.value) continue;
+    cmds.push('ingress ' + i + sel.value);
+  }
+  for (var c of cmds) {
+    try { await fetch('/cmd', { method: 'POST', body: c }); }
+    catch (e) { console.error(e); }
+  }
+}
+
+window.addEventListener('load', function () {
+  if (typeof update === 'function') update(function () { buildIngress(); });
+});

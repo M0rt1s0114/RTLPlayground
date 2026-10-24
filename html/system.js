@@ -293,6 +293,10 @@ function loadSysExtra() {
     sysInfo = s;
     var hn = document.getElementById('hostname');
     if (hn) hn.value = s.hostname || '';
+    var st = document.getElementById('session_timeout');
+    if (st && s.session_timeout) st.value = s.session_timeout;
+    var mm = document.getElementById('mac_addr');
+    if (mm && s.mac_address) mm.value = s.mac_address;
     var sp = s.syslog_server || '';
     var m = sp.match(/^([0-9.]+)(?::([0-9]+))?$/);
     if (m) {
@@ -302,6 +306,7 @@ function loadSysExtra() {
       if (pt && m[2]) pt.value = parseInt(m[2], 10);
     }
   }).catch(function (e) { console.error('information.json:', e); });
+  dhcpStatusLoad();
   fetch('/config').then(function (r) { return r.text(); }).then(function (t) {
     var cb = document.getElementById('syslog_en');
     if (cb) cb.checked = /^syslog on$/m.test(t);
@@ -443,4 +448,28 @@ async function dhcpSub() {
     await fetch('/cmd', { method: 'POST', body: 'ip dhcp' });
     alert(window.t ? t('已请求 DHCP 地址，请到路由器上查找交换机的新 IP。') : '已请求 DHCP 地址，请到路由器上查找交换机的新 IP。');
   } catch (err) { console.error(err); }
+}
+
+/* ── 会话超时 / 管理 MAC / DHCP 状态 ─────────────────────────────────────── */
+async function sessionSub() {
+  var v = parseInt(document.getElementById('session_timeout').value, 10);
+  if (!v || v < 1 || v > 65535) { alert(window.t ? t('会话超时必须是 1-65535 秒') : '会话超时必须是 1-65535 秒'); return; }
+  try { await fetch('/cmd', { method: 'POST', body: 'session ' + v }); } catch (e) { console.error(e); }
+}
+
+async function macSub() {
+  var v = document.getElementById('mac_addr').value.trim();
+  if (!/^([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}$/.test(v)) { alert(window.t ? t('MAC 格式：aa:bb:cc:dd:ee:ff') : 'MAC 格式：aa:bb:cc:dd:ee:ff'); return; }
+  try { await fetch('/cmd', { method: 'POST', body: 'mac ' + v }); } catch (e) { console.error(e); }
+}
+
+async function dhcpStatusLoad() {
+  var el = document.getElementById('dhcp_status');
+  if (!el) return;
+  try {
+    var r = await fetch('/cmd', { method: 'POST', body: 'ip' });
+    var b = (await r.text()).trim();
+    if (!b) { el.textContent = '—'; return; }
+    el.textContent = b.split('\n')[0];
+  } catch (e) { console.error(e); }
 }

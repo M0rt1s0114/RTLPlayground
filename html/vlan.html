@@ -36,7 +36,13 @@
     <div id="uPorts" style="margin-bottom:16px;"></div>
     <h2>PVID 端口（入口默认 VLAN）<button type="button" style="margin-left:16px;font-size:11px;padding:4px 10px;" onclick="pvClicked(true);">全选</button></h2>
     <div id="pPorts" style="margin-bottom:20px;"></div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+    <h2>入口过滤（ingress）</h2>
+    <div class="card" style="max-width:900px;">
+      <div id="ingressPorts" style="display:flex;gap:16px;flex-wrap:wrap;"></div>
+      <button type="button" style="margin-top:12px;" onclick="ingressApply();">应用入口过滤</button>
+      <p class="note">固件不提供 ingress 当前状态查询，这里只发送设置；“不改变”表示该端口保持原值。</p>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;">
       <button type="button" id="vlan_sub" onclick="vlanSub();">更新 / 创建 VLAN</button>
       <button type="button" id="vlan_mgmt" onclick="vlanMgmt();">设为管理 VLAN</button>
     </div>
@@ -47,6 +53,5 @@
       <tbody id="vlanTableBody"></tbody>
     </table>
   </div>
-  <script src="/navigation.js"></script>
 </body>
 </html>

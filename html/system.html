@@ -31,6 +31,7 @@
         <div style="display:flex;gap:10px;margin-top:4px;">
           <button id="ip_sub" onclick="ipSub();">更新网络设置</button>
           <button id="dhcp_sub" onclick="dhcpSub();">通过 DHCP 获取地址</button>
+          <p class="note" id="dhcp_status">—</p>
         </div>
       </div>
       <div class="card" style="margin-top:20px;max-width:420px;">
@@ -82,6 +83,19 @@
         <button id="ntp_sub" onclick="ntpSub();">应用 NTP</button>
       </div>
       <div class="card" style="margin-top:20px;max-width:420px;">
+        <h2 style="margin-top:0;">会话超时</h2>
+        <div class="row"><div class="lcol"><label for="session_timeout">超时 [秒]</label></div>
+          <div class="rcol"><input id="session_timeout" type="number" min="1" max="65535" style="width:120px;"></div></div>
+        <button onclick="sessionSub();">应用会话超时</button>
+      </div>
+      <div class="card" style="margin-top:20px;max-width:420px;">
+        <h2 style="margin-top:0;">管理 MAC</h2>
+        <div class="row"><div class="lcol"><label for="mac_addr">MAC 地址</label></div>
+          <div class="rcol"><input id="mac_addr" type="text" style="width:170px;" placeholder="aa:bb:cc:dd:ee:ff"></div></div>
+        <p class="note">修改后请用新 MAC 重新连接。</p>
+        <button onclick="macSub();">应用 MAC</button>
+      </div>
+      <div class="card" style="margin-top:20px;max-width:420px;">
         <h2 style="margin-top:0;">Flash 存储</h2>
         <p class="note">将当前运行配置保存到 Flash 持久化存储。</p>
         <button id="flash_sub" onclick="flashSave();">保存配置到 Flash</button>
@@ -115,7 +129,6 @@
     </div>
   </div>
   <script src="/system.js"></script>
-  <script src="/navigation.js"></script>
   <script>
   function openTab(evt, id) {
     document.querySelectorAll('.tab-content').forEach(function(c){c.classList.remove('active');});

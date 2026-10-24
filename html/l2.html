@@ -13,6 +13,11 @@
   <div class="main-wrap">
     <h1>L2 MAC 地址表</h1>
     <div id="ports"></div>
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px;">
+      <input type="text" id="l2filter" placeholder="过滤 MAC / VLAN / 端口" style="width:240px;" oninput="renderL2();">
+      <button type="button" onclick="flushL2();">清空 L2 表</button>
+      <span class="note" id="l2count"></span>
+    </div>
     <table id="l2table" style="width:100%;">
       <thead>
         <tr><th>端口</th><th>MAC 地址</th><th>VLAN</th><th>类型</th><th>删除</th></tr>
@@ -20,6 +25,5 @@
       <script src="/l2.js"></script>
     </table>
   </div>
-  <script src="/navigation.js"></script>
 </body>
 </html>

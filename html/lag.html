@@ -35,6 +35,19 @@
         <button onclick="lacpDisable(3);">关闭 LACP</button>
       </div></div>
     </div>
+    <h2 style="margin-top:28px;">LAG Hash 因子</h2>
+    <div class="card" style="max-width:900px;">
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
+        <label for="laghash_group">组</label>
+        <select id="laghash_group" onchange="lagHashLoad();">
+          <option value="1">LAG 1</option><option value="2">LAG 2</option>
+          <option value="3">LAG 3</option><option value="4">LAG 4</option>
+        </select>
+        <span class="note">（固件不支持清空所有因子；至少保留一项）</span>
+      </div>
+      <div id="laghash_opts" style="display:flex;gap:14px;flex-wrap:wrap;"></div>
+      <div style="margin-top:12px;"><button onclick="lagHashApply();">应用 Hash 因子</button></div>
+    </div>
     <h2 style="margin-top:28px;">LACP（802.3ad）状态</h2>
     <div class="card" style="margin-top:12px;max-width:900px;">
       <p id="lacp-on" class="note">—</p>
@@ -49,6 +62,5 @@
     </div>
     <script src="/lag.js"></script>
   </div>
-  <script src="/navigation.js"></script>
 </body>
 </html>

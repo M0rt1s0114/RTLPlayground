@@ -17,7 +17,8 @@ function createPortTable() {
       const tr = tbl.insertRow();
       let td = tr.insertCell(); td.appendChild(document.createTextNode(`Port ${i}`));
       let portName = portNames[physToLogPort[i-1]] || '';
-      td = tr.insertCell(); td.appendChild(document.createTextNode(portName));
+      td = tr.insertCell();
+      td.innerHTML = '<input id="pname_' + i + '" style="width:120px;" value="' + escAttr(portName) + '">';
       td = tr.insertCell(); td.innerHTML = linkS[pState[i] + 1];
       if (pIsSFP[i-1]) {
         const sfpSel = '<select id="sfp_sel_' + i + '">'
@@ -28,7 +29,8 @@ function createPortTable() {
           + '<option value="100m">100M</option>'
           + '</select>';
         td = tr.insertCell(); td.innerHTML = sfpSel;
-        td = tr.insertCell(); td.textContent = 'SFP';
+        td = tr.insertCell();
+        td.innerHTML = '<input type="checkbox" id="disable_sfp_' + i + '"' + (pEnabled[i-1] ? '' : ' checked') + '>';
         td = tr.insertCell();
         td.innerHTML = '<button type="button" style="margin: 0 0 0 24px" onclick="applySfp(' + i + ');">Apply</button>';
       } else {
@@ -75,9 +77,13 @@ function updatePortTable() {
   if (tbl.rows.length <= 2 || !numPorts)
     return;
   for (let i = 1; i <= numPorts ; i++) {
-    if (pIsSFP[i-1])
-      continue;
+    if (!tbl.rows[i]) continue;
     tbl.rows[i].cells[2].innerHTML = `${linkS[pState[i-1]+1]}`;
+    if (pIsSFP[i-1]) {
+      var sd = document.getElementById('disable_sfp_' + i);
+      if (sd) sd.checked = !pEnabled[i-1];
+      continue;
+    }
     if (!clicked[i] && pState[i - 1] < 0) {
       document.getElementById('speed_sel_' + i).disabled = true;
       document.getElementById('disable_port_' + i).checked = true;
@@ -85,24 +91,41 @@ function updatePortTable() {
   }
 }
 
+function escAttr(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+}
+
+function portNameValue(port) {
+  var el = document.getElementById('pname_' + port);
+  return el ? el.value.trim() : '';
+}
+
+async function sendCmd(body) {
+  try { await fetch('/cmd', { method: 'POST', body: body }); }
+  catch (err) { console.error(err); }
+}
+
+async function sendPortName(port) {
+  if (typeof portNames === 'undefined') return;
+  var oldName = portNames[physToLogPort[port - 1]] || '';
+  var newName = portNameValue(port);
+  if (!newName || newName === oldName) return;
+  if (!/^\S{1,15}$/.test(newName)) { alert(window.t ? t('端口名不能含空格，最长 15 字符') : '端口名不能含空格，最长 15 字符'); return; }
+  await sendCmd('port ' + port + ' name ' + newName);
+  portNames[physToLogPort[port - 1]] = newName;
+}
+
 async function applySpeed(port) {
   var speed = document.getElementById('speed_sel_' + port).value;
   var disabled = document.getElementById('disable_port_' + port).checked;
+  await sendPortName(port);
   var cmd = "port " + port + " ";
   if (!disabled)
     cmd = cmd + speed;
   else
     cmd = cmd + "off";
   console.log("CMD: " + cmd);
-  try {
-    const response = await fetch('/cmd', {
-      method: 'POST',
-      body: cmd
-    });
-    console.log('Completed!', response);
-  } catch(err) {
-    console.error(`Error: ${err}`);
-  }
+  await sendCmd(cmd);
 }
 
 async function portOnOff(p) {
@@ -216,8 +239,8 @@ async function applySfp(port) {
   var slot = pIsSFP[port - 1];
   if (!slot) return;
   var speed = document.getElementById('sfp_sel_' + port).value;
-  try {
-    await fetch('/cmd', { method: 'POST', body: 'sfp ' + slot + ' ' + speed });
-    console.log('SFP ' + slot + ' -> ' + speed);
-  } catch (err) { console.error(err); }
+  var disabled = document.getElementById('disable_sfp_' + port).checked;
+  await sendPortName(port);
+  await sendCmd('port ' + port + (disabled ? ' off' : ' on'));
+  if (!disabled) await sendCmd('sfp ' + slot + ' ' + speed);
 }

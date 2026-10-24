@@ -36,7 +36,7 @@
         选择 <code style="font-family:var(--mono);background:var(--sur2);padding:2px 6px;border-radius:4px;">.bin</code>
         格式的固件文件后点击"上传并刷入"。
       </p>
-      <form enctype="multipart/form-data" action="/upload" method="POST" id="uploadForm">
+      <form enctype="multipart/form-data" action="/upload" method="POST" id="uploadForm" onsubmit="return startUpload(event);">
         <div class="file-input-wrap">
           <label class="file-label" id="fileLabel" for="uploadedfile">&#128190; 选择固件文件</label>
           <input name="uploadedfile" type="file" accept=".bin" id="uploadedfile"
@@ -44,6 +44,12 @@
           <span id="file-name">未选择文件</span>
         </div>
         <p class="warn">⚠ 刷写过程中请勿断电，否则可能造成设备变砖。</p>
+        <div id="fwprog" style="display:none;margin-top:10px;">
+          <div style="height:8px;background:var(--sur2);border-radius:4px;overflow:hidden;">
+            <div id="fwbar" style="height:100%;width:0;background:var(--acc);transition:width .2s;"></div>
+          </div>
+          <p class="note" id="fwprogtext" style="margin-top:6px;"></p>
+        </div>
         <div style="margin-top:12px;">
           <input type="submit" id="submitBtn" value="上传并刷入固件" disabled
                  style="opacity:.4;cursor:not-allowed;">
@@ -51,7 +57,6 @@
       </form>
     </div>
   </div>
-  <script src="/navigation.js"></script>
   <script>
   function setFileUI(ok, msg) {
     var btn = document.getElementById('submitBtn');
@@ -102,6 +107,62 @@
       if (!found) return setFileUI(false, '✗ 这个固件不是为「' + info.hw_ver + '」构建的，型号不匹配');
     }
     setFileUI(true, '✓ 固件检查通过（' + Math.round(file.size / 1024) + ' KB）');
+  }
+  async function waitForReboot() {
+    var st = document.getElementById('fw-status');
+    for (var i = 0; i < 50; i++) {
+      await new Promise(function (r) { setTimeout(r, 3000); });
+      try {
+        var r = await fetch('/information.json', { cache: 'no-store' });
+        if (r.ok) {
+          st.style.color = 'var(--grn)';
+          st.textContent = '✓ 设备已恢复运行，请重新登录。';
+          document.getElementById('submitBtn').disabled = false;
+          document.getElementById('submitBtn').style.opacity = '1';
+          document.getElementById('submitBtn').style.cursor = 'pointer';
+          return;
+        }
+      } catch (e) {}
+      st.textContent = '设备重启中…（' + ((i + 1) * 3) + ' s）';
+    }
+    st.style.color = 'var(--red)';
+    st.textContent = '✗ 等待设备恢复超时，请检查设备状态后手动刷新。';
+  }
+
+  function startUpload(ev) {
+    ev.preventDefault();
+    var input = document.getElementById('uploadedfile');
+    if (!input.files || !input.files.length) { alert('请选择固件文件'); return false; }
+    var btn = document.getElementById('submitBtn');
+    var prog = document.getElementById('fwprog');
+    var bar = document.getElementById('fwbar');
+    var progText = document.getElementById('fwprogtext');
+    var status = document.getElementById('fw-status');
+    if (status) status.textContent = '';
+    btn.disabled = true; btn.style.opacity = '.4'; btn.style.cursor = 'not-allowed';
+    prog.style.display = 'block';
+    var fd = new FormData();
+    fd.append('uploadedfile', input.files[0], input.files[0].name);
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', '/upload', true);
+    xhr.upload.onprogress = function (e) {
+      if (!e.lengthComputable) return;
+      var pct = Math.round(e.loaded * 100 / e.total);
+      bar.style.width = pct + '%';
+      progText.textContent = '上传中 ' + pct + '%（' + Math.round(e.loaded / 1024) + ' / ' + Math.round(e.total / 1024) + ' KB）';
+    };
+    xhr.onload = function () {
+      bar.style.width = '100%';
+      progText.textContent = '上传完成，等待设备重启…';
+      if (status) { status.style.color = 'var(--mut)'; status.textContent = '上传完成，设备重启中…'; }
+      waitForReboot();
+    };
+    xhr.onerror = function () {
+      if (status) { status.style.color = 'var(--mut)'; status.textContent = '连接中断，设备可能正在重启…'; }
+      waitForReboot();
+    };
+    xhr.send(fd);
+    return false;
   }
   </script>
 </body>

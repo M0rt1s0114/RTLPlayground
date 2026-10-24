@@ -1,10 +1,15 @@
 /* theme + i18n (merged to keep the flash file table small) */
 /* theme.js – 主题选择（light / dark / Selenized），保存在 localStorage */
 (function () {
-  var THEMES = { dark: '深色', light: '浅色', 'sel-dark': 'Selenized 深色', 'sel-light': 'Selenized 浅色' };
+  var THEMES = { system: '跟随系统', dark: '深色', light: '浅色', 'sel-dark': 'Selenized 深色', 'sel-light': 'Selenized 浅色' };
+  function systemPref() {
+    try { return window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'; }
+    catch (e) { return 'dark'; }
+  }
   function apply(v) {
-    if (v === 'dark') document.documentElement.removeAttribute('data-theme');
-    else document.documentElement.setAttribute('data-theme', v);
+    var eff = (v === 'system') ? systemPref() : v;
+    if (eff === 'dark') document.documentElement.removeAttribute('data-theme');
+    else document.documentElement.setAttribute('data-theme', eff);
   }
   var cur = 'dark';
   try { cur = localStorage.getItem('rtl_theme') || 'dark'; } catch (e) {}
@@ -14,6 +19,18 @@
     try { localStorage.setItem('rtl_theme', v); } catch (e) {}
     apply(v);
   };
+  try {
+    var mq = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)');
+    if (mq) {
+      var onChange = function () {
+        var c = 'dark';
+        try { c = localStorage.getItem('rtl_theme') || 'dark'; } catch (e) {}
+        if (c === 'system') apply('system');
+      };
+      if (mq.addEventListener) mq.addEventListener('change', onChange);
+      else if (mq.addListener) mq.addListener(onChange);
+    }
+  } catch (e) {}
 })();
 
 /* i18n.js - runtime zh/en translation for the modular UI */
@@ -361,6 +378,65 @@
      "Set VLAN $1 as the management VLAN? If your port does not carry that VLAN, this page will become unreachable."]
   ]);
 
+  var EXTRA6 = {
+ "/ RX": "/ RX",
+ "（固件不支持清空所有因子；至少保留一项）": "(the firmware cannot clear all factors; keep at least one selected)"
+};
+  Object.keys(EXTRA6).forEach(function (k) { DICT[k] = EXTRA6[k]; });
+  PATTERNS = PATTERNS.concat([
+ [
+  "^上传中 (\\\\d+)%（(\\\\d+) / (\\\\d+) KB）$",
+  "Uploading $1% ($2 / $3 KB)"
+ ],
+ [
+  "^设备重启中…（(\\\\d+) s）$",
+  "Device rebooting… ($1 s)"
+ ]
+]);
+
+  var EXTRA5 = {
+ "跟随系统": "System",
+ "实时流量": "Live traffic",
+ "累计包数：TX": "Total packets: TX",
+ " / RX": " / RX",
+ "会话超时": "Session timeout",
+ "超时 [秒]": "Timeout [s]",
+ "应用会话超时": "Apply timeout",
+ "管理 MAC": "Management MAC",
+ "修改后请用新 MAC 重新连接。": "Reconnect using the new MAC after applying.",
+ "应用 MAC": "Apply MAC",
+ "LAG Hash 因子": "LAG hash factors",
+ "应用 Hash 因子": "Apply hash factors",
+ "至少选择一个 hash 因子（固件不接受清空）": "Select at least one hash factor (the firmware cannot clear all)",
+ "源端口": "Source port",
+ "源 MAC": "Source MAC",
+ "目的 MAC": "Destination MAC",
+ "源 IP": "Source IP",
+ "目的 IP": "Destination IP",
+ "源端口号": "Source port number",
+ "目的端口号": "Destination port number",
+ "入口过滤（ingress）": "Ingress filter",
+ "不改变": "unchanged",
+ "全部": "all",
+ "仅 Untagged": "untagged only",
+ "仅 Tagged": "tagged only",
+ "应用入口过滤": "Apply ingress filter",
+ "固件不提供 ingress 当前状态查询，这里只发送设置；“不改变”表示该端口保持原值。": "The firmware does not report the current ingress state; this only sends settings. “unchanged” keeps the current mode.",
+ "过滤 MAC / VLAN / 端口": "filter MAC / VLAN / port",
+ "清空 L2 表": "Flush L2 table",
+ "上传中": "uploading ",
+ "上传完成，等待设备重启…": "Upload complete, waiting for the device to reboot…",
+ "上传完成，设备重启中…": "Upload complete; the device is rebooting…",
+ "设备重启中…": "Device rebooting…",
+ "设备已恢复运行，请重新登录。": "The device is back online; please log in again.",
+ "等待设备恢复超时，请检查设备状态后手动刷新。": "Timed out waiting for the device; check it and reload manually.",
+ "连接中断，设备可能正在重启…": "Connection lost; the device may be rebooting…",
+ "端口名不能含空格，最长 15 字符": "Port name must not contain spaces and be at most 15 characters",
+ "会话超时必须是 1-65535 秒": "Session timeout must be 1-65535 seconds",
+ "MAC 格式：aa:bb:cc:dd:ee:ff": "MAC format: aa:bb:cc:dd:ee:ff"
+};
+  Object.keys(EXTRA5).forEach(function (k) { DICT[k] = EXTRA5[k]; });
+
   function translateText(s) {
     if (lang === 'zh' || !s) return null;
     var t = s.trim();
@@ -439,5 +515,67 @@
       setTimeout(function () { pending = false; apply(); }, 40);
     });
     mo.observe(document.body, { childList: true, subtree: true, characterData: true });
+  });
+})();
+
+/* ── navigation + overview info (merged here to save BANK1 file-table space) ── */
+(function () {
+  function buildNav() {
+    var path = location.pathname.split('/').pop() || 'index.html';
+    var links = [
+      { href: 'index.html',     label: '概览',     icon: '⬡' },
+      { href: 'ports.html',     label: '端口配置', icon: '⛭' },
+      { href: 'stat.html',      label: '端口统计', icon: '◈' },
+      { href: 'vlan.html',      label: 'VLAN',     icon: '◧' },
+      { href: 'l2.html',        label: 'L2 表',    icon: '⊞' },
+      { href: 'mirror.html',    label: '端口镜像', icon: '⇆' },
+      { href: 'stp.html',       label: '生成树',   icon: '⌁' },
+      { href: 'lag.html',       label: '链路聚合', icon: '⇌' },
+      { href: 'lldp.html',      label: 'LLDP',     icon: '⌖' },
+      { href: 'isolation.html', label: '端口隔离', icon: '⌗' },
+      { href: 'eee.html',       label: '节能以太网', icon: '⚡' },
+      { href: 'bandwidth.html', label: '带宽限速', icon: '◉' },
+      { href: 'system.html',    label: '系统设置', icon: '⚙' },
+      { href: 'update.html',    label: '固件升级', icon: '↑' },
+    ];
+    var ul = document.createElement('ul');
+    links.forEach(function (l) {
+      var li = document.createElement('li');
+      var a = document.createElement('a');
+      a.href = l.href;
+      a.setAttribute('data-icon', l.icon);
+      a.textContent = l.label;
+      if (l.href === path) a.classList.add('active');
+      li.appendChild(a);
+      ul.appendChild(li);
+    });
+    var nav = document.getElementById('sidebar');
+    if (nav) nav.appendChild(ul);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', buildNav);
+  else buildNav();
+})();
+
+/* overview: fetch information.json and fill the info table (index only) */
+(function () {
+  var KEY_LABELS = {
+    hw_ver: '型号', sw_ver: '固件版本', build_date: '编译日期', hostname: '主机名',
+    mac_address: 'MAC 地址', chip_temp: '芯片温度', ip_address: 'IP 地址',
+    ip_gateway: '默认网关', ip_netmask: '子网掩码', syslog_server: 'Syslog 服务器',
+    flash_size: 'Flash 大小', sfp_slot_0: 'SFP 插槽 1', sfp_slot_1: 'SFP 插槽 2'
+  };
+  document.addEventListener('DOMContentLoaded', function () {
+    var tbody = document.querySelector('#infoTable tbody');
+    if (!tbody) return;
+    fetch('/information.json').then(function (r) { return r.json(); }).then(function (data) {
+      function row(k, v) {
+        var tr = document.createElement('tr');
+        var td1 = document.createElement('td'); td1.textContent = k;
+        var td2 = document.createElement('td'); td2.textContent = v;
+        tr.appendChild(td1); tr.appendChild(td2); tbody.appendChild(tr);
+      }
+      Object.keys(KEY_LABELS).forEach(function (k) { if (k in data) row(KEY_LABELS[k], data[k]); });
+      Object.keys(data).forEach(function (k) { if (!(k in KEY_LABELS)) row(k, data[k]); });
+    }).catch(function (e) { console.error('information.json:', e); });
   });
 })();
