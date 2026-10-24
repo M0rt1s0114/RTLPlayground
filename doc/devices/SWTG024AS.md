@@ -15,7 +15,7 @@ Also the RJ45 connectors can be all plastic/non-shielded or with metal shielding
 
 ## PCB
 
-<img src="photos/SWTG024AS-v2.0-unmanaged/SWTG024AS-v2.0-top-uman.png" width="300" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/SWTG024AS-v2.0-unmanaged/SWTG024AS-v2.0-top-uman.png" width="300" />
 
 # SWTG024AS-v2.0 managed vs unmanged
 Changes I found with my board vs [Managed version](https://github.com/up-n-atom/SWTG118AS/tree/main/photos/SWGT024AS-v2.0) of the PCB.

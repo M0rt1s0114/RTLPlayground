@@ -11,21 +11,21 @@ of the device just above the big label, might be covered by a QC sticker.
 
 * Hisource Hi-K0402WS
 
-<img src="photos/PCB-K0402WS-V3.0/HiSource_HI-K0402WS.jpg" width="300" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/PCB-K0402WS-V3.0/HiSource_HI-K0402WS.jpg" width="300" />
 
 * Ztyuav Z-QWYT0402
 
-<img src="photos/PCB-K0402WS-V3.0/Ztyuav_Z-QWYT0402.jpg" width="300" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/PCB-K0402WS-V3.0/Ztyuav_Z-QWYT0402.jpg" width="300" />
 
-<img src="photos/PCB-K0402WS-V3.0/Ztyuav_Z-QWYT0402_label.jpg" width="300" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/PCB-K0402WS-V3.0/Ztyuav_Z-QWYT0402_label.jpg" width="300" />
 
 * SICSOLINK SL-G0402F
 
-<img src="photos/PCB-K0402WS-V3.0/SICSOLINK SL-G0402F.jpg" width="300"/>
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/PCB-K0402WS-V3.0/SICSOLINK SL-G0402F.jpg" width="300"/>
 
 * YuanLey YS25-0402 <sup><sub>Note: there are [multiple revisions](PCB-K0402WS-V1.0.md) of the YS25-0402. This is the newer revision that has a "Vlan" switch on the front.</sub></sup>
 
-<img src="photos/PCB-K0402WS-V3.0/YuanLey_YS25-0402.jpg" width="300"/>
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/PCB-K0402WS-V3.0/YuanLey_YS25-0402.jpg" width="300"/>
 
 ### Programming
 
@@ -52,11 +52,11 @@ For the initial flash (at least with flashrom), the bin file produced by the bui
 
 Top side
 
-<img src="photos/PCB-K0402WS-V3.0/PCB-top.jpg" width="300" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/PCB-K0402WS-V3.0/PCB-top.jpg" width="300" />
 
 Bottom
 
-<img src="photos/PCB-K0402WS-V3.0/PCB-bottom.jpg" width="300" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/PCB-K0402WS-V3.0/PCB-bottom.jpg" width="300" />
 
 ### T2, serial console
 

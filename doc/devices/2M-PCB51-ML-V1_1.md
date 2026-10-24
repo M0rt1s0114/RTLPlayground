@@ -10,11 +10,11 @@ The `POE-2G080110GS` is an unmanaged 8x2.5G RJ45 and 1xSFP+ PoE switch sold by M
 ## Hardware overview
 Front
 
-<img src="photos/POE-2G080110GS/POE-2G080110GS-front.jpg" width="300" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/POE-2G080110GS/POE-2G080110GS-front.jpg" width="300" />
 
 Label
 
-<img src="photos/POE-2G080110GS/POE-2G080110GS-label.jpg" width="300" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/POE-2G080110GS/POE-2G080110GS-label.jpg" width="300" />
 
 The stock firmware from a POE-2G080110GS device had a sha256sum of `4c280853465eaad80e1772075c0f2d29c11fb8c561547f06353d3a5443c388e9`.
 
@@ -22,7 +22,7 @@ The stock firmware from a POE-2G080110GS device had a sha256sum of `4c280853465e
 
 Top silkscreen is marked `2M-PCB51-ML-V1.1`. PoE is provided by RTL8238C. Flash chip is 4 MB Winbond 25Q32JV (U8).
 
-<img src="photos/POE-2G080110GS/POE-2G080110GS-pcb.jpg" width="300" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/POE-2G080110GS/POE-2G080110GS-pcb.jpg" width="300" />
 
 > [!CAUTION]
 > This device operates on mains voltage, which can be a dangerous or potentially lethal hazard. Even after the device is unplugged, high-voltage capacitors can remain charged afterward and may still shock you. Do not attempt to open/disassemble a mains powered device unless you understand how to do so safely. Also, opening the device may void your warranty.

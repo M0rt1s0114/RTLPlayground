@@ -22,21 +22,21 @@ RTL8373-based 8×2.5G PoE + 1×SFP switch.
 
 Front panel:
 
-<img src="photos/HASIVO_S1100WP-8GT-1SX-SE/front.jpg" width="600" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/HASIVO_S1100WP-8GT-1SX-SE/front.jpg" width="600" />
 
 Label:
 
-<img src="photos/HASIVO_S1100WP-8GT-1SX-SE/label.jpg" width="600" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/HASIVO_S1100WP-8GT-1SX-SE/label.jpg" width="600" />
 
 ### PCB overview
 
 Top side:
 
-<img src="photos/HASIVO_S1100WP-8GT-1SX-SE/pcb_top.jpg" width="600" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/HASIVO_S1100WP-8GT-1SX-SE/pcb_top.jpg" width="600" />
 
 Bottom side:
 
-<img src="photos/HASIVO_S1100WP-8GT-1SX-SE/pcb_bottom.jpg" width="600" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/HASIVO_S1100WP-8GT-1SX-SE/pcb_bottom.jpg" width="600" />
 
 ### Port layout
 

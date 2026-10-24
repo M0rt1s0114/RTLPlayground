@@ -8,7 +8,7 @@ Original software is running UART on 9600 baud rate.
 
 * Ruiying RY-4GT-2SX
 
-<img src="photos/FG-4GT-2SX_V2.0/RY-4GT-2SX_label.jpg" width="300" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/FG-4GT-2SX_V2.0/RY-4GT-2SX_label.jpg" width="300" />
 
 ## What works
 
@@ -24,15 +24,15 @@ Original software is running UART on 9600 baud rate.
 
 Front panel
 
-<img src="photos/FG-4GT-2SX_V2.0/chassis-front.jpg" width="300" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/FG-4GT-2SX_V2.0/chassis-front.jpg" width="300" />
 
 Top side
 
-<img src="photos/FG-4GT-2SX_V2.0/PCB-top.jpg" width="300" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/FG-4GT-2SX_V2.0/PCB-top.jpg" width="300" />
 
 Bottom
 
-<img src="photos/FG-4GT-2SX_V2.0/PCB-bottom.jpg" width="300" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/FG-4GT-2SX_V2.0/PCB-bottom.jpg" width="300" />
 
 ## Power supply
 

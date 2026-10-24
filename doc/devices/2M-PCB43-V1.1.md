@@ -21,11 +21,11 @@ The device is fully supported:
 ### Hardware overview
 Front
 
-<img src="photos/2M-PCB43-V1.1-managed/2M-PCB43-V1.1-front.jpeg" width="300" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/2M-PCB43-V1.1-managed/2M-PCB43-V1.1-front.jpeg" width="300" />
 
 Label
 
-<img src="photos/2M-PCB43-V1.1-managed/2M-PCB43-V1.1-label.jpeg" width="300" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/2M-PCB43-V1.1-managed/2M-PCB43-V1.1-label.jpeg" width="300" />
 
 ### PCB overview
 
@@ -34,11 +34,11 @@ Label
 
 Top side
 
-<img src="photos/2M-PCB43-V1.1-managed/2M-PCB43-V1.1-top.jpeg" width="300" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/2M-PCB43-V1.1-managed/2M-PCB43-V1.1-top.jpeg" width="300" />
 
 Bottom
 
-<img src="photos/2M-PCB43-V1.1-managed/2M-PCB43-V1.1-bottom.jpeg" width="300" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/2M-PCB43-V1.1-managed/2M-PCB43-V1.1-bottom.jpeg" width="300" />
 
 ### J1, serial console
 

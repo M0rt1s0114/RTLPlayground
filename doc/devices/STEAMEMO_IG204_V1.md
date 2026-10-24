@@ -26,7 +26,7 @@ Using SPI clamp in-board is the only method for initial installation.
 
 Top side
 
-<img src="photos/STEAMEMO_IG204_V1/PCB-top.jpg" width="600" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/STEAMEMO_IG204_V1/PCB-top.jpg" width="600" />
 
 ### Connectors
 ### T7, serial console

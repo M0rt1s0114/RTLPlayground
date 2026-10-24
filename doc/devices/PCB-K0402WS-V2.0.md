@@ -30,15 +30,15 @@ Using SPI clamp in-board is the only method for initial installation.
 
 Front panel
 
-<img src="photos/PCB-K0402WS-V2.0/chassis-front.jpg" width="400" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/PCB-K0402WS-V2.0/chassis-front.jpg" width="400" />
 
 Bottom label
 
-<img src="photos/PCB-K0402WS-V2.0/chassis-bottom.jpg" width="400" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/PCB-K0402WS-V2.0/chassis-bottom.jpg" width="400" />
 
 Top side (PCB)
 
-<img src="photos/PCB-K0402WS-V2.0/PCB-top.jpg" width="300" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/PCB-K0402WS-V2.0/PCB-top.jpg" width="300" />
 
 ### Port layout
 

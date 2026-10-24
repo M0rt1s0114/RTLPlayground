@@ -14,7 +14,7 @@ Use a SOIC-8 clamp to the flash chip (U1 on silkscreen) at the top of the board,
 
 The board has been seen to ship with a single [BoyaMicro BY25Q16BSSIG](https://www.lcsc.com/datasheet/C382744.pdf) 16Mbit (2MiB) chip, though exact BOM may vary.
 
-<a href="photos/PCB-K0402WS-V1.0/flash.jpg"><img src="photos/PCB-K0402WS-V1.0/flash.jpg" width="300" /></a>
+<a href="https://github.com/logicog/RTLPlayground/blob/main/doc/devices/photos/PCB-K0402WS-V1.0/flash.jpg"><img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/PCB-K0402WS-V1.0/flash.jpg" width="300" /></a>
 
 ### What works
 
@@ -33,19 +33,19 @@ The board has been seen to ship with a single [BoyaMicro BY25Q16BSSIG](https://w
 
 Front panel
 
-<a href="photos/PCB-K0402WS-V1.0/ports.jpg"><img src="photos/PCB-K0402WS-V1.0/ports.jpg" width="300" /></a>
+<a href="https://github.com/logicog/RTLPlayground/blob/main/doc/devices/photos/PCB-K0402WS-V1.0/ports.jpg"><img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/PCB-K0402WS-V1.0/ports.jpg" width="300" /></a>
 
 PCB top
 
-<a href="photos/PCB-K0402WS-V1.0/pcb-top.jpg"><img src="photos/PCB-K0402WS-V1.0/pcb-top.jpg" width="300" /></a>
+<a href="https://github.com/logicog/RTLPlayground/blob/main/doc/devices/photos/PCB-K0402WS-V1.0/pcb-top.jpg"><img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/PCB-K0402WS-V1.0/pcb-top.jpg" width="300" /></a>
 
 PCB bottom
 
-<a href="photos/PCB-K0402WS-V1.0/pcb-bottom.jpg"><img src="photos/PCB-K0402WS-V1.0/pcb-bottom.jpg" width="300" /></a>
+<a href="https://github.com/logicog/RTLPlayground/blob/main/doc/devices/photos/PCB-K0402WS-V1.0/pcb-bottom.jpg"><img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/PCB-K0402WS-V1.0/pcb-bottom.jpg" width="300" /></a>
 
 Bottom and rear
 
-<a href="photos/PCB-K0402WS-V1.0/bottom.jpg"><img src="photos/PCB-K0402WS-V1.0/bottom.jpg" width="300" /></a>
+<a href="https://github.com/logicog/RTLPlayground/blob/main/doc/devices/photos/PCB-K0402WS-V1.0/bottom.jpg"><img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/PCB-K0402WS-V1.0/bottom.jpg" width="300" /></a>
 
 ### Power supply
 
@@ -69,4 +69,4 @@ Standard 0.1" / 2.54mm pin headers will not fit, so wires or clips may be used i
 
 The image below shows some oversized clips clumsily attached.
 
-<a href="photos/PCB-K0402WS-V1.0/uart.jpg"><img src="photos/PCB-K0402WS-V1.0/uart.jpg" width="300" /></a>
+<a href="https://github.com/logicog/RTLPlayground/blob/main/doc/devices/photos/PCB-K0402WS-V1.0/uart.jpg"><img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/PCB-K0402WS-V1.0/uart.jpg" width="300" /></a>

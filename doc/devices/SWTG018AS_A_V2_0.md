@@ -26,7 +26,7 @@ These can be programed independently by using said switch - so it is e.g. possib
   - 1 × SFP+: 1000 / 2500 / 10000 Mbps
 - **Power**: 12V DC, 1A barrel connector 
 
-<img src="photos/SWTG018AS_A_V_2_0/label.jpg" width="300" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/SWTG018AS_A_V_2_0/label.jpg" width="300" />
 
 ### What works
 The device is fully supported:
@@ -41,11 +41,11 @@ The device is fully supported:
 
 Top side
 
-<img src="photos/SWTG018AS_A_V_2_0/pcb_top.jpg" width="300" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/SWTG018AS_A_V_2_0/pcb_top.jpg" width="300" />
 
 Bottom
 
-<img src="photos/SWTG018AS_A_V_2_0/pcb_bottom.jpg" width="300" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/SWTG018AS_A_V_2_0/pcb_bottom.jpg" width="300" />
 
 ### J1, serial console
 

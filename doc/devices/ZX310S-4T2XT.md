@@ -17,7 +17,7 @@ PHY 2x RTL8261BE
   - 2 x RJ45: 10/100/1000/2500/5000/10000 Mbps
 - **Power**: 12V DC, 2A barrel connector
 
-<img src="photos/ZX310S-4T2XT/label.jpg" width="300" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/ZX310S-4T2XT/label.jpg" width="300" />
 
 ### What works
 The device is fully supported:
@@ -32,11 +32,11 @@ The device is fully supported:
 
 Top side
 
-<img src="photos/ZX310S-4T2XT/pcb_top.jpg" width="300" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/ZX310S-4T2XT/pcb_top.jpg" width="300" />
 
 Bottom
 
-<img src="photos/ZX310S-4T2XT/pcb_bottom.jpg" width="300" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/ZX310S-4T2XT/pcb_bottom.jpg" width="300" />
 
 ### J1, serial console
 

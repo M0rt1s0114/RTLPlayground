@@ -16,17 +16,17 @@ Port 5 RJ45 is interfaced through a RTL8221B IC.
 
 ## Label (V2.0)
 
-<img src="photos/ZX-SWTGW215AS-V2.0/label.jpg" width="300" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/ZX-SWTGW215AS-V2.0/label.jpg" width="300" />
 
 ## PCB (V2.0)
 
-<img src="photos/ZX-SWTGW215AS-V2.0/pcb_top.jpg" width="300" />
-<img src="photos/ZX-SWTGW215AS-V2.0/pcb_bottom.jpg" width="300" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/ZX-SWTGW215AS-V2.0/pcb_top.jpg" width="300" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/ZX-SWTGW215AS-V2.0/pcb_bottom.jpg" width="300" />
 
 ## PCB (V2.1)
 
-<img src="photos/ZX-SWTGW215AS-V2.1/pcb-top.jpg" width="300" />
-<img src="photos/ZX-SWTGW215AS-V2.1/pcb-bottom.jpg" width="300" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/ZX-SWTGW215AS-V2.1/pcb-top.jpg" width="300" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/ZX-SWTGW215AS-V2.1/pcb-bottom.jpg" width="300" />
 
 ## Connectors
 

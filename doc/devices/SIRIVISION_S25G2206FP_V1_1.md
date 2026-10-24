@@ -25,7 +25,7 @@ The device is fully supported:
 
 Top side
 
-<img src="photos/SIRIVISION_S25G2206FP_V1_1/dev_pcb_top.jpg" width="300" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/SIRIVISION_S25G2206FP_V1_1/dev_pcb_top.jpg" width="300" />
 
 ## Power supply
 

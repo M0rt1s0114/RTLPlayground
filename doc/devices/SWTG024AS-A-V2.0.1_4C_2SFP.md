@@ -15,7 +15,7 @@ It is highly similar to SWTG024AS-V2.0, with the only difference being the GPIO 
   - 4 × RJ45: 10/100/1000/2500 Mbps
   - 2 × SFP+: 1000 / 2500 / 10000 Mbps
 
-<img src="photos/SWTG024AS-A-V2_0_1_19650/horaco-zx-sg4t2-label.jpg" width="300" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/SWTG024AS-A-V2_0_1_19650/horaco-zx-sg4t2-label.jpg" width="300" />
 
 ### What works
 The device is fully supported:
@@ -29,11 +29,11 @@ The device is fully supported:
 
 Top side
 
-<img src="photos/SWTG024AS-A-V2_0_1_19650/horaco-zx-sg4t2-pcb-top.jpg" width="300" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/SWTG024AS-A-V2_0_1_19650/horaco-zx-sg4t2-pcb-top.jpg" width="300" />
 
 Bottom
 
-<img src="photos/SWTG024AS-A-V2_0_1_19650/horaco-zx-sg4t2-pcb-bottom.jpg" width="300" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/SWTG024AS-A-V2_0_1_19650/horaco-zx-sg4t2-pcb-bottom.jpg" width="300" />
 
 ### J1, serial console
 

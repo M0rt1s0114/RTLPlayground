@@ -67,6 +67,10 @@ device simulator is provided, which runs entirely under Linux as a local webserv
 >   the SPA or the single `app.js` refer to the upstream UI, not this fork.
 > - New pages compared with upstream: Spanning Tree, LLDP, port isolation, storm
 >   control, LACP status, per-port device list, DNS/NTP/theme/language settings.
+> - Device photos and the RTL8372N datasheet are not bundled (they are large);
+>   use the upstream repository instead:
+>   [device photos](https://github.com/logicog/RTLPlayground/tree/main/doc/devices/photos)
+>   and the [RTL8372N datasheet](https://github.com/logicog/RTLPlayground/blob/main/doc/datasheet/RealTek_RTL8372N-CG.pdf).
 > - **BANK1 is nearly full** (~75 bytes free): the HTML file table lives in
 >   BANK1, so adding web files can make the image build fail with
 >   `Bank 1: code segment too large`.  Merge small scripts instead of adding

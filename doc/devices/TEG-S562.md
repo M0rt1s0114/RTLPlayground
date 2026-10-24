@@ -26,11 +26,11 @@ Manufacturer information be found [on the product page](https://www.trendnet.com
 
 Top side
 
-<img src="photos/TEG-S562/TEG-S562-v1.0R-top.jpg" width="300" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/TEG-S562/TEG-S562-v1.0R-top.jpg" width="300" />
 
 Bottom
 
-<img src="photos/TEG-S562/TEG-S562-v1.0R-bottom.jpg" width="300" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/TEG-S562/TEG-S562-v1.0R-bottom.jpg" width="300" />
 
 ## Connectors
 

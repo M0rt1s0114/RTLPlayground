@@ -29,13 +29,13 @@ PoE is managed by an RTL8238B and a separate STC8H8K64U controller, not directly
 
 Front panel:
 
-![Front panel](photos/Hasivo-S1100P-8GT-1SX-S/front.jpg)
+![Front panel](https://github.com/logicog/RTLPlayground/blob/main/doc/devices/photos/Hasivo-S1100P-8GT-1SX-S/front.jpg)
 
 PCB top:
 
-![PCB top](photos/Hasivo-S1100P-8GT-1SX-S/pcb_top.jpg)
+![PCB top](https://github.com/logicog/RTLPlayground/blob/main/doc/devices/photos/Hasivo-S1100P-8GT-1SX-S/pcb_top.jpg)
 
 PCB bottom:
 
-![PCB bottom](photos/Hasivo-S1100P-8GT-1SX-S/pcb_bottom.jpg)
+![PCB bottom](https://github.com/logicog/RTLPlayground/blob/main/doc/devices/photos/Hasivo-S1100P-8GT-1SX-S/pcb_bottom.jpg)
 

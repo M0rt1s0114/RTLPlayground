@@ -32,15 +32,15 @@ Stock flash chip is 512KB in size. Consider replacing for update through Web UI.
 
 Top side
 
-<img src="photos/HYWS-SGT0108S-unmanaged\Assembled-top.jpg" width="300" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/HYWS-SGT0108S-unmanaged\Assembled-top.jpg" width="300" />
 
 Front
 
-<img src="photos/HYWS-SGT0108S-unmanaged\Assembled-front.jpg" width="300" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/HYWS-SGT0108S-unmanaged\Assembled-front.jpg" width="300" />
 
 Bottom
 
-<img src="photos/HYWS-SGT0108S-unmanaged\Assembled-bottom.jpg" width="300" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/HYWS-SGT0108S-unmanaged\Assembled-bottom.jpg" width="300" />
 
 ### PCB overview
 
@@ -49,15 +49,15 @@ Bottom
 
 Top side
 
-<img src="photos/HYWS-SGT0108S-unmanaged\PCB-top.jpg" width="300" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/HYWS-SGT0108S-unmanaged\PCB-top.jpg" width="300" />
 
 Bottom
 
-<img src="photos/HYWS-SGT0108S-unmanaged\PCB-bot.jpg" width="300" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/HYWS-SGT0108S-unmanaged\PCB-bot.jpg" width="300" />
 
 Original SPI Flash Chip
 
-<img src="photos/HYWS-SGT0108S-unmanaged\og_spi_flash.jpg" width="300" />
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/HYWS-SGT0108S-unmanaged\og_spi_flash.jpg" width="300" />
 
 ## Power supply
 
