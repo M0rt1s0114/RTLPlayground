@@ -67,7 +67,7 @@ property of the packet, as otherwise pakets will not be routed symmetrically.
 
 ## LAG configuration via the Web Interface
 In the web-interface select Link Aggregation in the left navigation panel. The page will look like this:
-![Alt text](images/LAG_config.png?raw=true "Link Aggregation Web-Page")
+![Alt text](https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/images/LAG_config.png "Link Aggregation Web-Page")
 Each of th 4 LAGs is configured separately. After the web-page has loaded, the current configuration
 can be edited by clicking on the port-images to include that port or exclude it from a LAG.
 When pressing on the Create/Update button, the LAG will be automatically created if not yet done, or

@@ -25,7 +25,7 @@ only the following features are provided:
 - Firmware updates via the web
 - Installation as a firmware upgrade from the original web-interface
 
-<img width="1673" height="977" alt="GUI" src="doc/images/gui.png" />
+<img width="1673" height="977" alt="GUI" src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/images/gui.png" />
 
 While the firmware provides already considerable improvements over the original managed firmware,
 the firmware still lacks support for the proprietary loop prevention
@@ -364,7 +364,7 @@ nano config.txt
 
 If you want to modify settings after the flash is done, go to the System tab and find the Startup Configuration.
 
-<img width="1673" height="978" alt="ADVANCED SETTINGS" src="doc/images/advanced_settings.png" />
+<img width="1673" height="978" alt="ADVANCED SETTINGS" src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/images/advanced_settings.png" />
 
 ```
 ip xxx.xxx.xxx.xxx      = IP address of the switch
