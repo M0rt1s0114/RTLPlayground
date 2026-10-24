@@ -72,6 +72,13 @@ jobs:
     container:
       image: debian:trixie
     steps:
+      # actions/checkout needs git inside the container to create a real
+      # repository; otherwise it falls back to an archive and "git diff" for
+      # the board-definition drift check cannot work.
+      - name: Install git for checkout
+        run: |
+          apt update
+          apt install -y git ca-certificates
       - uses: actions/checkout@v6
         with:
           path: branch
