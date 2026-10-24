@@ -36,7 +36,10 @@
     <div id="uPorts" style="margin-bottom:16px;"></div>
     <h2>PVID 端口（入口默认 VLAN）<button type="button" style="margin-left:16px;font-size:11px;padding:4px 10px;" onclick="pvClicked(true);">全选</button></h2>
     <div id="pPorts" style="margin-bottom:20px;"></div>
-    <div><button type="button" id="vlan_sub" onclick="vlanSub();">更新 / 创建 VLAN</button></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <button type="button" id="vlan_sub" onclick="vlanSub();">更新 / 创建 VLAN</button>
+      <button type="button" id="vlan_mgmt" onclick="vlanMgmt();">设为管理 VLAN</button>
+    </div>
     <script src="/vlan.js"></script>
     <h2 style="margin-top:32px;">已配置 VLAN</h2>
     <table id="vlanTable" style="width:100%;">

@@ -100,6 +100,7 @@ function getL2() {
   xhttp.onreadystatechange = function() {
     if (this.readyState == 4 && this.status == 200) {
       var s = JSON.parse(xhttp.responseText);
+      if (!Array.isArray(s) || !s.length) { l2Entries = []; l2CurrentEntry = 0; return; }
       var s = s.map(function(e) { 
         e.vlan = parseInt(e.vlan, 16);
         e.idx = parseInt(e.idx, 16);
@@ -108,7 +109,7 @@ function getL2() {
       return e;
     });
       l2Entries.push(...s);
-      if (l2Entries >= 4096) {
+      if (l2Entries.length >= 4096) {
         l2Entries = [];
         l2CurrentEntry = 0;
         clearInterval(l2GetInterval);

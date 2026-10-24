@@ -14,20 +14,30 @@ function createPortTable() {
       + '</select>';
       const dSwitch = '<input type="checkbox" id="disable_port" onchange="portOnOff();">'
      for (let i = 1; i <= numPorts; i++) {
-      if (pIsSFP[i-1])
-        continue;
-      console.log("Table row: " + i + "pState: " + pState[i-2]);
       const tr = tbl.insertRow();
       let td = tr.insertCell(); td.appendChild(document.createTextNode(`Port ${i}`));
       let portName = portNames[physToLogPort[i-1]] || '';
       td = tr.insertCell(); td.appendChild(document.createTextNode(portName));
       td = tr.insertCell(); td.innerHTML = linkS[pState[i] + 1];
-      td = tr.insertCell(); td.innerHTML = sSelect.replaceAll("speed_sel", "speed_sel_" + i);
-      td = tr.insertCell(); td.innerHTML = dSwitch.replaceAll("disable_port", "disable_port_" + i)
-						  .replace("portOnOff()", "portOnOff(" + i + ")");
-      var button = '<button type="button" style="margin: 0 0 0 24px" onclick="applySpeed(' + i + ');">Apply</button>';
-      td = tr.insertCell();
-      td.innerHTML = button;
+      if (pIsSFP[i-1]) {
+        const sfpSel = '<select id="sfp_sel_' + i + '">'
+          + '<option value="auto">Auto</option>'
+          + '<option value="10g">10G</option>'
+          + '<option value="2g5">2.5G</option>'
+          + '<option value="1g">1G</option>'
+          + '<option value="100m">100M</option>'
+          + '</select>';
+        td = tr.insertCell(); td.innerHTML = sfpSel;
+        td = tr.insertCell(); td.textContent = 'SFP';
+        td = tr.insertCell();
+        td.innerHTML = '<button type="button" style="margin: 0 0 0 24px" onclick="applySfp(' + i + ');">Apply</button>';
+      } else {
+        td = tr.insertCell(); td.innerHTML = sSelect.replaceAll("speed_sel", "speed_sel_" + i);
+        td = tr.insertCell(); td.innerHTML = dSwitch.replaceAll("disable_port", "disable_port_" + i)
+                .replace("portOnOff()", "portOnOff(" + i + ")");
+        td = tr.insertCell();
+        td.innerHTML = '<button type="button" style="margin: 0 0 0 24px" onclick="applySpeed(' + i + ');">Apply</button>';
+      }
       td = tr.insertCell();
       td.innerHTML = '<button type="button" onclick="showPortDevices(' + i + ');">查看</button>';
     }
@@ -180,7 +190,8 @@ async function showPortDevices(port) {
   modal.style.display = 'flex';
   var all = await fetchL2All();
   var rows = all.filter(function (e) {
-    var logical = (e.port === 9) ? 9 : (typeof logToPhysPort !== 'undefined' ? logToPhysPort[e.port] : e.port);
+    if (e.port === 9) return false; // CPU port
+    var logical = (typeof logToPhysPort !== 'undefined') ? logToPhysPort[e.port] : e.port;
     return logical === port;
   });
   tb.innerHTML = '';
@@ -199,4 +210,14 @@ async function showPortDevices(port) {
 
 function closeDevices() {
   document.getElementById('devmodal').style.display = 'none';
+}
+
+async function applySfp(port) {
+  var slot = pIsSFP[port - 1];
+  if (!slot) return;
+  var speed = document.getElementById('sfp_sel_' + port).value;
+  try {
+    await fetch('/cmd', { method: 'POST', body: 'sfp ' + slot + ' ' + speed });
+    console.log('SFP ' + slot + ' -> ' + speed);
+  } catch (err) { console.error(err); }
 }

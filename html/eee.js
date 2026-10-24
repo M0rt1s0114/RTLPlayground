@@ -42,6 +42,13 @@ function getEEE() {
   xhttp.timeout = 1500; sendXHTTP(xhttp);
 }
 
+async function eeePort(port, on) {
+  try {
+    await fetch('/cmd', { method: 'POST', body: 'eee ' + (on ? 'on' : 'off') + ' ' + port });
+    setTimeout(getEEE, 300);
+  } catch (err) { console.error(err); }
+}
+
 window.addEventListener("load", function() {
   update( () => {
     createEEE();

@@ -53,11 +53,12 @@ function fetchLag() {
   sendXHTTP(xhttp);
 }
 async function lagSub(l) {
-  var cmd = "lag " + l;
+  var ports = [];
   for (let i = 1; i <= numPorts; i++) {
     if (document.getElementById("p_mLAG"+l+"_"+i).checked)
-      cmd = cmd + ` ${i}`;
+      ports.push(i);
   }
+  var cmd = ports.length ? ("lag " + (l + 1) + " " + ports.join(" ")) : ("lag " + (l + 1) + " d");
   try {
     const response = await fetch('/cmd', {
       method: 'POST',
@@ -119,7 +120,7 @@ function lacpEnable(g) {
     var cb = document.getElementById('p_mLAG' + g + '_' + i);
     if (cb && cb.checked) ports.push(i);
   }
-  if (!ports.length) { alert('先勾选该组的成员端口'); return; }
+  if (!ports.length) { alert(window.t ? t('先勾选该组的成员端口') : '先勾选该组的成员端口'); return; }
   fetch('/cmd', { method: 'POST', body: 'lag ' + (g + 1) + ' lacp ' + ports.join(' ') })
     .then(function () { setTimeout(lacpLoad, 300); });
 }

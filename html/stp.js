@@ -73,7 +73,7 @@ function stpBuildCfg() {
     td = tr.insertCell();
     td.innerHTML = '<input type="number" min="0" max="200000000" id="stpcfg_' + i + '_cost" style="width:110px;">';
     td = tr.insertCell();
-    td.innerHTML = '<input type="number" min="0" max="255" id="stpcfg_' + i + '_prio" style="width:80px;">';
+    td.innerHTML = '<input type="number" min="0" max="240" step="16" id="stpcfg_' + i + '_prio" style="width:80px;">';
     td = tr.insertCell();
     td.innerHTML = stpSelect('stpcfg_' + i + '_guard', [['none', 'none'], ['bpdu', 'bpdu'], ['root', 'root']]);
     td = tr.insertCell();

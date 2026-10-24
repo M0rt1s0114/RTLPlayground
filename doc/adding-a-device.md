@@ -1,3 +1,9 @@
+> **Fork note (M0rt1s0114):** in this fork new boards are authored in
+> `boards/<NAME>.yaml` and `make boards` generates the files under
+> `machine/`.  The C-file workflow described below is the upstream workflow;
+> see [boards/README.md](../boards/README.md) for the YAML schema, `include`
+> and the generator.
+
 # Adding a new device
 
 A device is supported by adding one board header `.h` and board definition `.c` file

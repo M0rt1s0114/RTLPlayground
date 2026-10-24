@@ -16,7 +16,7 @@
   };
 })();
 
-/* i18n.js - runtime zh/en/ja translation for the modular UI */
+/* i18n.js - runtime zh/en translation for the modular UI */
 
 (function () {
   var LANG_KEY = 'rtl_lang';
@@ -338,6 +338,29 @@
   try { lang = localStorage.getItem(LANG_KEY) || 'zh'; } catch (e) {}
   if (lang !== 'zh' && lang !== 'en') lang = 'zh';
 
+  var EXTRA3 = {
+ "💾 选择固件文件": "💾 choose firmware file",
+ "入向 & 出向带宽限速": "Ingress & egress bandwidth limits",
+ "未知": "unknown",
+ "源端口 \\ 目标": "Source \\ Target"
+};
+  Object.keys(EXTRA3).forEach(function (k) { DICT[k] = EXTRA3[k]; });
+
+  var EXTRA4 = {
+ "通过 DHCP 获取地址": "Get address via DHCP",
+ "设为管理 VLAN": "Set as management VLAN",
+ "操作": "Action",
+ "确定要让交换机通过 DHCP 获取地址？当前地址会失效。": "Request an address via DHCP? The current address will be lost.",
+ "已请求 DHCP 地址，请到路由器上查找交换机的新 IP。": "DHCP requested; look up the new switch IP on your router.",
+ "把 VLAN ": "Set VLAN ",
+ " 设为管理 VLAN？如果当前连接的端口不携带该 VLAN，页面会失联。": " as the management VLAN? If your port does not carry that VLAN, this page will become unreachable."
+};
+  Object.keys(EXTRA4).forEach(function (k) { DICT[k] = EXTRA4[k]; });
+  PATTERNS = PATTERNS.concat([
+    ["^把 VLAN (\\d+) 设为管理 VLAN？如果当前连接的端口不携带该 VLAN，页面会失联。$",
+     "Set VLAN $1 as the management VLAN? If your port does not carry that VLAN, this page will become unreachable."]
+  ]);
+
   function translateText(s) {
     if (lang === 'zh' || !s) return null;
     var t = s.trim();
@@ -409,7 +432,12 @@
   document.addEventListener('DOMContentLoaded', function () {
     apply();
     initLangSelect();
-    var mo = new MutationObserver(function () { apply(); });
+    var pending = false;
+    var mo = new MutationObserver(function () {
+      if (pending) return;
+      pending = true;
+      setTimeout(function () { pending = false; apply(); }, 40);
+    });
     mo.observe(document.body, { childList: true, subtree: true, characterData: true });
   });
 })();

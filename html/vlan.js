@@ -156,6 +156,15 @@ async function loadVlanTable() {
   }
 }
 
+async function vlanMgmt() {
+  var v = document.getElementById('vid').value;
+  if (!v) { alert('Set VLAN ID first'); return; }
+  var msg = '把 VLAN ' + v + ' 设为管理 VLAN？如果当前连接的端口不携带该 VLAN，页面会失联。';
+  if (!confirm(window.t ? t(msg) : msg)) return;
+  try { await fetch('/cmd', { method: 'POST', body: 'vlan ' + v + ' mgmt' }); }
+  catch (err) { console.error(err); }
+}
+
 function deleteVlan(id) {
   if (!confirm('Delete VLAN ' + id + '?')) return;
   fetch('/cmd', { method: 'POST', body: 'vlan ' + id + ' d' })

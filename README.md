@@ -54,6 +54,26 @@ devices by looking at the image using e.g. Ghidra. If you want to contribute to 
 design of the web-interface or get a feeling for the interface first, a standalone
 device simulator is provided, which runs entirely under Linux as a local webserver.
 
+> **Fork notes (M0rt1s0114)**
+>
+> - Board definitions are YAML files under `boards/`.  The YAML is the source of
+>   truth; `make boards` regenerates the upstream-format files under `machine/`
+>   (the generated files are committed) and `make board_check` verifies they are
+>   in sync.  Alias models use a dts-style `include: <board>` instead of copying
+>   the whole definition.  See [boards/README.md](boards/README.md).
+> - The Web UI in this fork is a multi-page app (`html/*.html`, one script per
+>   page) with Chinese/English runtime translation and light/dark/Selenized
+>   themes, not the upstream single-page app.  Upstream documents that describe
+>   the SPA or the single `app.js` refer to the upstream UI, not this fork.
+> - New pages compared with upstream: Spanning Tree, LLDP, port isolation, storm
+>   control, LACP status, per-port device list, DNS/NTP/theme/language settings.
+> - **BANK1 is nearly full** (~75 bytes free): the HTML file table lives in
+>   BANK1, so adding web files can make the image build fail with
+>   `Bank 1: code segment too large`.  Merge small scripts instead of adding
+>   files.  The built image is ~263 KB.
+> - Building the board definitions needs Python 3 and PyYAML
+>   (`pip install pyyaml`); a normal firmware build does not need Python.
+
 ## (0) Compiling Requirements
 
 Install the following particular build requisites (Debian 12/13), note that Ubuntu 24.04

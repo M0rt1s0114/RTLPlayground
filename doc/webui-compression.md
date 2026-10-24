@@ -1,3 +1,8 @@
+> **Fork note (M0rt1s0114):** this fork keeps a multi-page UI instead of the
+> upstream single-page app.  The minify + gzip pipeline described here still
+> handles every file under `html/`; the SPA-specific paragraphs below describe
+> the upstream UI.
+
 # Compressing the Web UI Assets
 
 The Web UI (all files under `html/`) is embedded into the flash image and

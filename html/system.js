@@ -310,7 +310,7 @@ function loadSysExtra() {
 
 function hostnameSub() {
   var v = document.getElementById('hostname').value.trim();
-  if (!v) { alert('主机名不能为空'); return; }
+  if (!v) { alert(window.t ? t('主机名不能为空') : '主机名不能为空'); return; }
   fetch('/cmd', { method: 'POST', body: 'hostname ' + v })
     .then(loadSysExtra).catch(function (e) { console.error(e); });
 }
@@ -363,7 +363,7 @@ function dnsLoad() {
 function dnsSub() {
   var a = document.getElementById('dns1').value.trim();
   var b = document.getElementById('dns2').value.trim();
-  if (!a) { alert('DNS 服务器 1 不能为空；关闭 DNS 请填 0.0.0.0'); return; }
+  if (!a) { alert(window.t ? t('DNS 服务器 1 不能为空；关闭 DNS 请填 0.0.0.0') : 'DNS 服务器 1 不能为空；关闭 DNS 请填 0.0.0.0'); return; }
   fetch('/cmd', { method: 'POST', body: 'dns server ' + a + (b ? ' ' + b : '') })
     .then(function () { setTimeout(dnsLoad, 300); }).catch(function (e) { console.error(e); });
 }
@@ -435,3 +435,12 @@ window.addEventListener('load', function () {
   setInterval(dnsLoad, 15000);
   setInterval(ntpLoad, 15000);
 });
+
+async function dhcpSub() {
+  var msg = '确定要让交换机通过 DHCP 获取地址？当前地址会失效。';
+  if (!confirm(window.t ? t(msg) : msg)) return;
+  try {
+    await fetch('/cmd', { method: 'POST', body: 'ip dhcp' });
+    alert(window.t ? t('已请求 DHCP 地址，请到路由器上查找交换机的新 IP。') : '已请求 DHCP 地址，请到路由器上查找交换机的新 IP。');
+  } catch (err) { console.error(err); }
+}
