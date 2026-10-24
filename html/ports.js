@@ -227,7 +227,7 @@ async function showPortDevices(port) {
     var tr = tb.insertRow();
     tr.insertCell().textContent = e.mac;
     tr.insertCell().textContent = parseInt(e.vlan, 16);
-    tr.insertCell().textContent = e.type === 's' ? '静态' : '学习';
+    tr.insertCell().textContent = e.type === 's' ? '静态' : '动态学习';
   });
 }
 

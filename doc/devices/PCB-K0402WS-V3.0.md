@@ -21,7 +21,7 @@ of the device just above the big label, might be covered by a QC sticker.
 
 * SICSOLINK SL-G0402F
 
-<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/PCB-K0402WS-V3.0/SICSOLINK SL-G0402F.jpg" width="300"/>
+<img src="https://raw.githubusercontent.com/logicog/RTLPlayground/main/doc/devices/photos/PCB-K0402WS-V3.0/SICSOLINK%20SL-G0402F.jpg" width="300"/>
 
 * YuanLey YS25-0402 <sup><sub>Note: there are [multiple revisions](PCB-K0402WS-V1.0.md) of the YS25-0402. This is the newer revision that has a "Vlan" switch on the front.</sub></sup>
 

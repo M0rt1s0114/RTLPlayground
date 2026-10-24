@@ -437,6 +437,21 @@
 };
   Object.keys(EXTRA5).forEach(function (k) { DICT[k] = EXTRA5[k]; });
 
+  var EXTRA7 = {
+ "本机是根桥": "this switch is the root bridge",
+ "端口设置与命令行": "Port settings are identical to the CLI ",
+ "完全等价；桥设置点上方“应用桥设置”。": "; bridge settings are applied with “Apply bridge settings” above.",
+ "过滤": "Filter",
+ "设备数": "Clients",
+ "本端通告": "Local advertisement",
+ "对端通告": "Partner advertisement",
+ "聚合有效": "Aggregation valid",
+ "候选成员": "Candidate members",
+ "链路速率": "Link speed",
+ "动态学习": "learned"
+};
+  Object.keys(EXTRA7).forEach(function (k) { DICT[k] = EXTRA7[k]; });
+
   function translateText(s) {
     if (lang === 'zh' || !s) return null;
     var t = s.trim();
