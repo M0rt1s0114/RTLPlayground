@@ -28,6 +28,8 @@ function createPortTable() {
       var button = '<button type="button" style="margin: 0 0 0 24px" onclick="applySpeed(' + i + ');">Apply</button>';
       td = tr.insertCell();
       td.innerHTML = button;
+      td = tr.insertCell();
+      td.innerHTML = '<button type="button" onclick="showPortDevices(' + i + ');">查看</button>';
     }
   }
   tbl = document.getElementById('mtutable');
@@ -144,3 +146,57 @@ window.addEventListener("load", function() {
     const updatePortTableInterval = setInterval(updatePortTable, 1000);
   });
 });
+
+/* ── 端口设备清单（遍历 L2 表） ──────────────────────────────────────────── */
+var l2AllCache = null;
+var l2AllCacheAt = 0;
+
+async function fetchL2All() {
+  var now = Date.now();
+  if (l2AllCache && now - l2AllCacheAt < 5000) return l2AllCache;
+  var out = [], seen = {}, idx = 0, guard = 0;
+  while (guard++ < 24) {
+    var arr;
+    try { arr = await fetch('/l2.json?idx=' + idx).then(function (r) { return r.json(); }); }
+    catch (e) { break; }
+    if (!Array.isArray(arr) || !arr.length) break;
+    var added = 0;
+    arr.forEach(function (e) {
+      var k = parseInt(e.idx, 16);
+      if (!seen[k]) { seen[k] = 1; out.push(e); added++; }
+    });
+    if (!added || out.length >= 4096) break;
+    idx = parseInt(arr[arr.length - 1].idx, 16) + 1;
+  }
+  l2AllCache = out; l2AllCacheAt = now;
+  return out;
+}
+
+async function showPortDevices(port) {
+  var modal = document.getElementById('devmodal');
+  var tb = document.getElementById('devtable').tBodies[0];
+  document.getElementById('devtitle').textContent = '端口 ' + port + ' 的设备';
+  tb.innerHTML = '<tr><td colspan="3">…</td></tr>';
+  modal.style.display = 'flex';
+  var all = await fetchL2All();
+  var rows = all.filter(function (e) {
+    var logical = (e.port === 9) ? 9 : (typeof logToPhysPort !== 'undefined' ? logToPhysPort[e.port] : e.port);
+    return logical === port;
+  });
+  tb.innerHTML = '';
+  if (!rows.length) {
+    tb.innerHTML = '<tr><td colspan="3">暂无设备（L2 表为空或该端口未学习到 MAC）</td></tr>';
+    return;
+  }
+  rows.sort(function (a, b) { return a.mac.localeCompare(b.mac); });
+  rows.forEach(function (e) {
+    var tr = tb.insertRow();
+    tr.insertCell().textContent = e.mac;
+    tr.insertCell().textContent = parseInt(e.vlan, 16);
+    tr.insertCell().textContent = e.type === 's' ? '静态' : '学习';
+  });
+}
+
+function closeDevices() {
+  document.getElementById('devmodal').style.display = 'none';
+}

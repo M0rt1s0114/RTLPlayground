@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FreeSwitchOS · 端口配置</title>
-  <script src="/theme.js"></script>
+  <script src="/i18n.js"></script>
   <link rel="stylesheet" href="style.css">
   <script src="/main.js"></script>
 </head>
@@ -17,13 +17,20 @@
     <table id="speedtable" style="width:100%;max-width:760px;">
       <thead>
         <tr>
-          <th>端口</th><th>名称</th><th>当前速率</th><th>设置速率</th><th>禁用</th><th>应用</th>
+          <th>端口</th><th>名称</th><th>当前速率</th><th>设置速率</th><th>禁用</th><th>应用</th><th>设备</th>
         </tr>
       </thead>
     </table>
     <h2 style="margin-top:32px;">最大帧长（MTU）</h2>
     <table id="mtutable" style="margin-top:12px;"></table>
     <script src="/ports.js"></script>
+  </div>
+  <div id="devmodal" style="display:none;position:fixed;inset:0;background:#0008;z-index:300;align-items:center;justify-content:center;">
+    <div style="background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r);padding:18px;min-width:340px;max-height:80vh;overflow:auto;">
+      <h2 id="devtitle" style="margin-top:0;"></h2>
+      <table id="devtable"><thead><tr><th>MAC 地址</th><th>VLAN</th><th>类型</th></tr></thead><tbody></tbody></table>
+      <div style="margin-top:12px;"><button type="button" onclick="closeDevices();">关闭窗口</button></div>
+    </div>
   </div>
   <script src="/navigation.js"></script>
 </body>
